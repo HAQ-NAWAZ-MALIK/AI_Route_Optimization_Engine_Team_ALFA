@@ -1,0 +1,50 @@
+# Dependencies (installed in Docker)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs (generated in Docker)
+.next
+out
+dist
+build
+
+# Git
+.git
+.gitignore
+
+# Environment files (use Docker env vars instead)
+.env*.local
+
+# IDE
+.vscode
+.idea
+
+# Docker files (not needed in image)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Kubernetes (not needed in image)
+k8s
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Cache
+.npm
+.eslintcache
+*.tsbuildinfo
+
+# Documentation (not needed for runtime)
+*.md
+!README.md
+
+# Test files
+coverage
+.nyc_output
+__tests__
+*.test.ts
+*.spec.ts
