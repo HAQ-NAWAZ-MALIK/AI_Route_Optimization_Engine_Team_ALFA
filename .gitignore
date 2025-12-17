@@ -1,0 +1,57 @@
+# ========================================
+# AI Transport Optimizer - Git Ignore
+# ========================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js build outputs
+.next/
+out/
+dist/
+build/
+
+# Environment files (IMPORTANT: Never commit secrets!)
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Cache
+.npm/
+.eslintcache
+*.tsbuildinfo
+.turbo/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Debug logs
+*.log
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Vercel
+.vercel/
+
+# Local development
+*.local
