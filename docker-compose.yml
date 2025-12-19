@@ -1,0 +1,90 @@
+# ============================================================================
+# AI Transport Optimizer - Docker Compose
+# ============================================================================
+# Local development setup with optional Redis caching
+
+version: '3.8'
+
+services:
+  # Main optimizer service
+  optimizer:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - CACHE_LOCAL_TTL=300
+      - CACHE_REDIS_TTL=86400
+      - CACHE_MAX_ENTRIES=1000
+      # Optional: External API keys
+      - MAPBOX_TOKEN=${MAPBOX_TOKEN:-}
+      - TOMTOM_API_KEY=${TOMTOM_API_KEY:-}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/v1/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis cache (optional - for distributed caching)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+
+# ============================================================================
+# Development overrides (use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up)
+# ============================================================================
+# Create docker-compose.dev.yml for development overrides:
+#
+# version: '3.8'
+# services:
+#   optimizer:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     volumes:
+#       - .:/app
+#       - /app/node_modules
+#       - /app/.next
+#     environment:
+#       - NODE_ENV=development
+#     command: npm run dev
