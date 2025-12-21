@@ -1,0 +1,343 @@
+// AI Transport Optimizer - Database Schema
+// Enterprise API Portal with Authentication, Billing & Analytics
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// AUTHENTICATION & USER MANAGEMENT
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String? // Hashed password (null for OAuth users)
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts          Account[]
+  sessions          Session[]
+  apiKeys           ApiKey[]
+  subscriptions     Subscription[]
+  usageLogs         UsageLog[]
+  invoices          Invoice[]
+  auditLogs         AuditLog[]
+  notifications     NotificationRead[]
+
+  @@index([email])
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================================
+// API KEY MANAGEMENT
+// ============================================================================
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String // User-friendly name
+  keyHash     String   @unique // Hashed API key (bcrypt)
+  prefix      String // First 8 chars for display (e.g., "ropt_1234")
+  active      Boolean  @default(true) // false = revoked
+  userId      String
+  permissions String[] // Array of permission scopes
+  rateLimit   Int      @default(100) // Requests per 15 minutes
+  lastUsedAt  DateTime?
+  expiresAt   DateTime? // Optional expiration
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usageLogs UsageLog[]
+
+  @@index([userId])
+  @@index([keyHash])
+  @@index([prefix])
+  @@map("api_keys")
+}
+
+// ============================================================================
+// BILLING & SUBSCRIPTIONS
+// ============================================================================
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String
+  plan                 SubscriptionPlan   @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
+  billingInterval      BillingInterval    @default(MONTHLY)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  promoCodeId          String?
+  discountPercent      Int                @default(0)
+  priceAtPurchase      Int                @default(0) // cents — what the user actually pays
+  adminGranted         Boolean            @default(false)
+  adminGrantedBy       String?
+  adminGrantReason     String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promoCode PromoCode? @relation(fields: [promoCodeId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionPlan {
+  FREE
+  TRIAL
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
+  INCOMPLETE
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  userId          String
+  amount          Int           // Amount in cents
+  currency        String        @default("usd")
+  status          InvoiceStatus @default(PENDING)
+  description     String?       // e.g. "PRO plan — monthly"
+  planSnapshot    String?       // plan at time of invoice
+  discountPercent Int           @default(0)
+  stripeInvoiceId String?       @unique
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([userId, createdAt])
+  @@map("invoices")
+}
+
+// ============================================================================
+// AUDIT LOGGING
+// ============================================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // Type of action (USER_ROLE_CHANGED, etc.)
+  userId    String   // Admin who performed the action
+  details   Json     // Additional details about the action
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, timestamp])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+// ============================================================================
+// USAGE TRACKING & ANALYTICS
+// ============================================================================
+
+model UsageLog {
+  id            String   @id @default(cuid())
+  apiKeyId      String
+  userId        String
+  endpoint      String // e.g., "/api/v1/optimize/route"
+  method        String // GET, POST, etc.
+  statusCode    Int
+  responseTime  Int // Milliseconds
+  requestSize   Int? // Bytes
+  responseSize  Int? // Bytes
+  errorMessage  String?
+  metadata      Json? // Additional data (locations count, etc.)
+  ipAddress     String?
+  userAgent     String?
+  timestamp     DateTime @default(now())
+
+  // Relations
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([apiKeyId])
+  @@index([userId])
+  @@index([timestamp])
+  @@index([endpoint])
+  @@map("usage_logs")
+}
+
+// ============================================================================
+// SYSTEM CONFIGURATION (Admin)
+// ============================================================================
+
+model PlatformConfig {
+  id        String   @id @default("platform_config")
+  config    Json     // All platform settings as JSON
+  updatedAt DateTime @updatedAt
+  updatedBy String?  // Admin user ID who last updated
+
+  @@map("platform_config")
+}
+
+// ============================================================================
+// PROMO CODES
+// ============================================================================
+
+model PromoCode {
+  id              String    @id @default(cuid())
+  code            String    @unique           // e.g. "LAUNCH50"
+  discountPercent Int                         // 10 = 10% off
+  maxRedemptions  Int       @default(100)
+  timesRedeemed   Int       @default(0)
+  validFrom       DateTime  @default(now())
+  expiresAt       DateTime?
+  applicablePlans String[]  @default(["PRO","ENTERPRISE"]) // which plans it works on
+  active          Boolean   @default(true)
+  createdBy       String?                     // admin user ID
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  subscriptions   Subscription[]
+
+  @@map("promo_codes")
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+model Notification {
+  id           String               @id @default(cuid())
+  type         NotificationType
+  priority     NotificationPriority @default(NORMAL)
+  title        String
+  body         String
+  actionUrl    String?              // Optional CTA link (e.g. /billing)
+  userId       String?              // null = broadcast
+  targetPlans  SubscriptionPlan[]   // [] = all plans; non-empty = only these plans
+  scheduledAt  DateTime?            // null = send immediately
+  sentAt       DateTime?            // set when delivered
+  deletedAt    DateTime?            // soft delete for retraction
+  createdBy    String?              // admin user ID
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  reads        NotificationRead[]
+
+  @@index([userId])
+  @@index([sentAt])
+  @@index([type])
+  @@index([deletedAt])
+  @@map("notifications")
+}
+
+model NotificationRead {
+  id             String       @id @default(cuid())
+  notificationId String
+  userId         String
+  readAt         DateTime     @default(now())
+
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, userId])
+  @@index([userId])
+  @@map("notification_reads")
+}
+
+enum NotificationType {
+  SYSTEM
+  BILLING
+  ANNOUNCEMENT
+  SECURITY
+  API_ALERT
+}
+
+enum NotificationPriority {
+  NORMAL
+  IMPORTANT
+  URGENT
+}
