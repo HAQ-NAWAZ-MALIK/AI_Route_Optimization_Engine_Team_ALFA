@@ -1,0 +1,493 @@
+openapi: 3.1.0
+info:
+  title: AI Transport Optimizer API
+  version: 1.0.0
+  description: |
+    Production-grade route optimization API featuring multiple algorithms,
+    real-road routing, traffic awareness, and multi-cluster optimization.
+    
+    ## Features
+    - **TSP Christofides Algorithm** - 1.5x optimal guarantee
+    - **Genetic Algorithm** - Near-optimal for complex routes
+    - **Nearest Neighbor** - Fast greedy heuristic
+    - **Exhaustive Search** - Optimal for small datasets
+    - **OSRM Integration** - Real road network routing
+    - **Traffic Awareness** - TomTom API integration
+  contact:
+    name: AI Transport Optimizer
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local Development
+  - url: https://your-domain.com/api/v1
+    description: Production
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      tags: [System]
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /algorithms:
+    get:
+      summary: List available algorithms
+      operationId: getAlgorithms
+      tags: [System]
+      responses:
+        '200':
+          description: List of optimization algorithms
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlgorithmsResponse'
+
+  /optimize/route:
+    post:
+      summary: Optimize a single route
+      operationId: optimizeRoute
+      tags: [Optimization]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OptimizeRouteRequest'
+      responses:
+        '200':
+          description: Successful optimization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptimizeRouteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /optimize/multi-cluster:
+    post:
+      summary: Optimize routes for multiple cabs
+      operationId: optimizeMultiCluster
+      tags: [Optimization]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MultiClusterRequest'
+      responses:
+        '200':
+          description: Successful multi-cluster optimization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiClusterResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /matrix/distance:
+    post:
+      summary: Calculate distance matrix
+      operationId: getDistanceMatrix
+      tags: [Utilities]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistanceMatrixRequest'
+      responses:
+        '200':
+          description: Distance matrix calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistanceMatrixResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    Coordinate:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat:
+          type: number
+          minimum: -90
+          maximum: 90
+          description: Latitude
+        lng:
+          type: number
+          minimum: -180
+          maximum: 180
+          description: Longitude
+
+    Location:
+      allOf:
+        - $ref: '#/components/schemas/Coordinate'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              type: string
+              description: Unique identifier
+            name:
+              type: string
+              description: Display name
+            address:
+              type: string
+              description: Address
+
+    EmployeeInput:
+      allOf:
+        - $ref: '#/components/schemas/Location'
+        - type: object
+          properties:
+            preferredPickupTime:
+              type: string
+              pattern: '^\d{2}:\d{2}$'
+              description: Preferred pickup time (HH:mm)
+            timeWindowStart:
+              type: string
+              pattern: '^\d{2}:\d{2}$'
+            timeWindowEnd:
+              type: string
+              pattern: '^\d{2}:\d{2}$'
+
+    OptimizeRouteRequest:
+      type: object
+      required: [origin, destinations, constraints]
+      properties:
+        origin:
+          $ref: '#/components/schemas/Location'
+        destinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmployeeInput'
+          minItems: 1
+          maxItems: 500
+        tripType:
+          type: string
+          enum: [pickup, drop]
+          default: pickup
+        constraints:
+          type: object
+          required: [departureTime]
+          properties:
+            departureTime:
+              type: string
+              pattern: '^\d{2}:\d{2}$'
+            maxTotalDuration:
+              type: number
+              description: Maximum route duration in minutes
+            bufferPerStop:
+              type: number
+              description: Buffer time per stop in minutes
+        options:
+          type: object
+          properties:
+            algorithm:
+              type: string
+              enum: [nearest_neighbor, christofides, genetic, exhaustive, auto]
+              default: auto
+            useRealRoads:
+              type: boolean
+              default: true
+            considerTraffic:
+              type: boolean
+              default: false
+            generateAlternatives:
+              type: boolean
+              default: false
+            maxAlternatives:
+              type: integer
+              default: 2
+
+    OptimizeRouteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        requestId:
+          type: string
+        processingTimeMs:
+          type: number
+        result:
+          type: object
+          properties:
+            route:
+              $ref: '#/components/schemas/OptimizedRoute'
+            metrics:
+              $ref: '#/components/schemas/OptimizationMetrics'
+            alternatives:
+              type: array
+              items:
+                $ref: '#/components/schemas/AlternativeRoute'
+
+    OptimizedRoute:
+      type: object
+      properties:
+        id:
+          type: string
+        stops:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteStop'
+        totalDistance:
+          type: number
+          description: Total distance in km
+        totalDuration:
+          type: number
+          description: Total duration in minutes
+        estimatedArrival:
+          type: string
+        geometry:
+          type: string
+          description: Encoded polyline
+        optimizationMethod:
+          type: string
+
+    RouteStop:
+      type: object
+      properties:
+        sequence:
+          type: integer
+        location:
+          $ref: '#/components/schemas/Location'
+        arrivalTime:
+          type: string
+        departureTime:
+          type: string
+        distanceFromPrevious:
+          type: number
+        durationFromPrevious:
+          type: number
+        cumulativeDistance:
+          type: number
+        cumulativeDuration:
+          type: number
+
+    OptimizationMetrics:
+      type: object
+      properties:
+        algorithmUsed:
+          type: string
+        optimizationDuration:
+          type: number
+        improvementOverNaive:
+          type: number
+        efficiencyScore:
+          type: number
+
+    AlternativeRoute:
+      type: object
+      properties:
+        route:
+          $ref: '#/components/schemas/OptimizedRoute'
+        description:
+          type: string
+        comparisonToMain:
+          type: object
+          properties:
+            distanceDiff:
+              type: number
+            durationDiff:
+              type: number
+
+    MultiClusterRequest:
+      type: object
+      required: [office, employees, cabs]
+      properties:
+        office:
+          $ref: '#/components/schemas/Location'
+        employees:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmployeeInput'
+        cabs:
+          type: array
+          items:
+            type: object
+            required: [id, capacity]
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              capacity:
+                type: integer
+                minimum: 1
+        config:
+          type: object
+          properties:
+            maxIterations:
+              type: integer
+            routeOptimizationAlgorithm:
+              type: string
+
+    MultiClusterResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        requestId:
+          type: string
+        processingTimeMs:
+          type: number
+        result:
+          type: object
+          properties:
+            clusters:
+              type: array
+              items:
+                type: object
+                properties:
+                  cabId:
+                    type: string
+                  cabName:
+                    type: string
+                  employees:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmployeeInput'
+                  route:
+                    $ref: '#/components/schemas/OptimizedRoute'
+            totalCabs:
+              type: integer
+            totalEmployees:
+              type: integer
+            metrics:
+              type: object
+              properties:
+                averageLoadFactor:
+                  type: number
+                totalDistance:
+                  type: number
+                totalDuration:
+                  type: number
+
+    DistanceMatrixRequest:
+      type: object
+      required: [coordinates]
+      properties:
+        coordinates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coordinate'
+          minItems: 2
+          maxItems: 100
+        useRealRoads:
+          type: boolean
+          default: true
+
+    DistanceMatrixResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        requestId:
+          type: string
+        processingTimeMs:
+          type: number
+        result:
+          type: object
+          properties:
+            distances:
+              type: array
+              items:
+                type: array
+                items:
+                  type: number
+            durations:
+              type: array
+              items:
+                type: array
+                items:
+                  type: number
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, unhealthy]
+        version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: number
+        services:
+          type: object
+          properties:
+            optimizer:
+              type: boolean
+            osrm:
+              type: boolean
+
+    AlgorithmsResponse:
+      type: object
+      properties:
+        algorithms:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+              timeComplexity:
+                type: string
+              qualityGuarantee:
+                type: string
+              maxEfficient:
+                type: integer
+              supportsTimeWindows:
+                type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+        message:
+          type: string
+        requestId:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
