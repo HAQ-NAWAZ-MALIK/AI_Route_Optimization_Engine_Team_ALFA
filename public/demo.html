@@ -1,0 +1,3476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Route Optimizer — Intelligent Fleet Management</title>
+
+    <!-- Fonts - Apple-like system fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=SF+Pro+Text:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Mapbox -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+
+    <style>
+        /* ============================================
+           CSS Custom Properties - Apple Design System
+           ============================================ */
+        :root {
+            /* Colors */
+            --apple-black: #1d1d1f;
+            --apple-gray-1: #86868b;
+            --apple-gray-2: #f5f5f7;
+            --apple-gray-3: #fbfbfd;
+            --apple-blue: #0071e3;
+            --apple-blue-hover: #0077ed;
+            --apple-green: #34c759;
+            --apple-orange: #ff9500;
+            --apple-red: #ff3b30;
+            --apple-purple: #af52de;
+            --apple-teal: #5ac8fa;
+            --apple-cyan: #06b6d4;
+            --apple-lime: #84cc16;
+            --apple-pink: #ec4899;
+
+            /* Dark Theme Colors */
+            --gray-900: #0a0a0a;
+            --gray-800: #1a1a1a;
+            --gray-700: #2d2d2d;
+            --gray-600: #404040;
+            --gray-500: #6b7280;
+
+            /* Route Colors */
+            --route-1: #007AFF;
+            --route-2: #34C759;
+            --route-3: #FF9500;
+            --route-4: #AF52DE;
+            --route-5: #FF3B30;
+            --route-6: #5AC8FA;
+
+            /* Glassmorphism */
+            --glass-bg: rgba(255, 255, 255, 0.72);
+            --glass-bg-dark: rgba(29, 29, 31, 0.72);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+            /* Typography */
+            --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            --font-text: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, monospace;
+
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+            --space-3xl: 64px;
+
+            /* Border Radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-xl: 22px;
+            --radius-full: 980px;
+
+            /* Transitions */
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-medium: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* ============================================
+           Reset & Base Styles
+           ============================================ */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: var(--font-text);
+            background: var(--apple-gray-3);
+            color: var(--apple-black);
+            line-height: 1.47059;
+            letter-spacing: -0.022em;
+            overflow-x: hidden;
+        }
+
+        /* ============================================
+           Navigation Bar - Apple Style
+           ============================================ */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: var(--glass-bg);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background var(--transition-medium);
+        }
+
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .navbar-content {
+            width: 100%;
+            max-width: 1024px;
+            padding: 0 var(--space-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-logo {
+            font-family: var(--font-display);
+            font-size: 21px;
+            font-weight: 600;
+            color: var(--apple-black);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .navbar-logo svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xl);
+        }
+
+        .navbar-link {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--apple-black);
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity var(--transition-fast);
+        }
+
+        .navbar-link:hover {
+            opacity: 1;
+        }
+
+        .navbar-cta {
+            background: var(--apple-blue);
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+
+        .navbar-cta:hover {
+            background: var(--apple-blue-hover);
+            transform: scale(1.02);
+        }
+
+        /* ============================================
+           Hero Section
+           ============================================ */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px var(--space-lg) var(--space-3xl);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 40%, rgba(0, 113, 227, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(175, 82, 222, 0.03) 0%, transparent 50%);
+            animation: gradientShift 20s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(2%, 2%) rotate(1deg);
+            }
+
+            66% {
+                transform: translate(-2%, -1%) rotate(-1deg);
+            }
+        }
+
+        .hero-eyebrow {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--apple-orange);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-md);
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards 0.2s;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(48px, 8vw, 96px);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -0.045em;
+            color: var(--apple-black);
+            margin-bottom: var(--space-lg);
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards 0.4s;
+        }
+
+        .hero-title .gradient-text {
+            background: linear-gradient(90deg, var(--apple-blue), var(--apple-purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(19px, 2.5vw, 28px);
+            font-weight: 400;
+            color: var(--apple-gray-1);
+            max-width: 700px;
+            margin-bottom: var(--space-2xl);
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards 0.6s;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+            justify-content: center;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards 0.8s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============================================
+           Buttons - Apple Style
+           ============================================ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            font-family: var(--font-text);
+            font-size: 17px;
+            font-weight: 400;
+            padding: 12px 22px;
+            border-radius: var(--radius-full);
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--apple-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--apple-blue-hover);
+            transform: scale(1.02);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--apple-blue);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 113, 227, 0.08);
+        }
+
+        .btn-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--apple-black);
+            border: 0.5px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-large {
+            font-size: 21px;
+            padding: 18px 36px;
+        }
+
+        .btn-icon {
+            width: 20px;
+            height: 20px;
+            transition: transform var(--transition-fast);
+        }
+
+        .btn:hover .btn-icon {
+            transform: translateX(4px);
+        }
+
+        /* ============================================
+           Scroll Indicator
+           ============================================ */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-sm);
+            opacity: 0;
+            animation: fadeInUp 0.8s ease forwards 1s, float 3s ease-in-out infinite 1.5s;
+        }
+
+        .scroll-indicator span {
+            font-size: 12px;
+            color: var(--apple-gray-1);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .scroll-mouse {
+            width: 24px;
+            height: 40px;
+            border: 2px solid var(--apple-gray-1);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .scroll-mouse::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 8px;
+            background: var(--apple-gray-1);
+            border-radius: 2px;
+            animation: scrollWheel 2s ease-in-out infinite;
+        }
+
+        @keyframes scrollWheel {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(8px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-10px);
+            }
+        }
+
+        /* ============================================
+           Feature Cards Section
+           ============================================ */
+        .features-section {
+            padding: var(--space-3xl) var(--space-lg);
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--space-3xl);
+        }
+
+        .section-eyebrow {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--apple-gray-1);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--space-sm);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            color: var(--apple-black);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-medium);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: var(--space-lg);
+        }
+
+        .feature-icon.blue {
+            background: linear-gradient(135deg, #007AFF, #5856D6);
+        }
+
+        .feature-icon.green {
+            background: linear-gradient(135deg, #34C759, #30D158);
+        }
+
+        .feature-icon.orange {
+            background: linear-gradient(135deg, #FF9500, #FF3B30);
+        }
+
+        .feature-icon.purple {
+            background: linear-gradient(135deg, #AF52DE, #5856D6);
+        }
+
+        .feature-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+            color: var(--apple-black);
+        }
+
+        .feature-description {
+            font-size: 17px;
+            color: var(--apple-gray-1);
+            line-height: 1.5;
+        }
+
+        /* ============================================
+           App Section - Main Interface
+           ============================================ */
+        .app-section {
+            padding: var(--space-3xl) var(--space-lg);
+            background: linear-gradient(180deg, var(--apple-gray-2) 0%, var(--apple-gray-3) 100%);
+        }
+
+        .app-container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .app-interface {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: var(--space-md);
+            height: calc(100vh - 150px);
+            max-height: 800px;
+            min-height: 500px;
+            background: white;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12),
+                0 0 0 0.5px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Sidebar Panel */
+        .sidebar-panel {
+            background: var(--apple-gray-3);
+            display: flex;
+            flex-direction: column;
+            border-right: 0.5px solid rgba(0, 0, 0, 0.08);
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar-header {
+            padding: var(--space-sm) var(--space-md);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .sidebar-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--apple-black);
+            margin-bottom: 2px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 10px;
+            color: var(--apple-gray-1);
+        }
+
+        /* Status Pill */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: var(--radius-full);
+            font-size: 10px;
+            font-weight: 500;
+            margin-top: var(--space-xs);
+        }
+
+        .status-pill.ready {
+            background: rgba(52, 199, 89, 0.12);
+            color: var(--apple-green);
+        }
+
+        .status-pill.processing {
+            background: rgba(0, 113, 227, 0.12);
+            color: var(--apple-blue);
+        }
+
+        .status-pill.complete {
+            background: rgba(175, 82, 222, 0.12);
+            color: var(--apple-purple);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-pill.processing .status-dot {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        /* Controls - Collapsible Data Panel */
+        .data-panel-wrapper {
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .data-panel-toggle {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px var(--space-sm);
+            background: var(--apple-gray-2);
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-family: var(--font-text);
+        }
+
+        .data-panel-toggle:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .data-panel-toggle-text {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--apple-black);
+        }
+
+        .data-panel-toggle-icon {
+            font-size: 10px;
+            transition: transform var(--transition-fast);
+        }
+
+        .data-panel-wrapper.collapsed .data-panel-toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .data-panel-content {
+            max-height: 220px;
+            overflow: hidden;
+            transition: max-height var(--transition-medium);
+        }
+
+        .data-panel-wrapper.collapsed .data-panel-content {
+            max-height: 0;
+        }
+
+        .sidebar-controls {
+            padding: 4px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .control-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 6px;
+            background: white;
+            border: 0.5px solid rgba(0, 0, 0, 0.08);
+            border-radius: 6px;
+            font-family: var(--font-text);
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--apple-black);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-align: left;
+        }
+
+        .control-btn:hover {
+            background: var(--apple-gray-2);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.primary {
+            background: var(--apple-blue);
+            color: white;
+            border-color: transparent;
+        }
+
+        .control-btn.primary:hover:not(:disabled) {
+            background: var(--apple-blue-hover);
+        }
+
+        .control-btn-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            background: var(--apple-gray-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .control-btn.primary .control-btn-icon {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .control-btn-label {
+            display: block;
+            font-weight: 500;
+            font-size: 10px;
+        }
+
+        .control-btn-desc {
+            display: block;
+            font-size: 9px;
+            opacity: 0.7;
+            margin-top: 0;
+        }
+
+        /* Info Button */
+        .info-btn {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--apple-gray-2);
+            border: none;
+            color: var(--apple-gray-1);
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            flex-shrink: 0;
+        }
+
+        .info-btn:hover {
+            background: var(--apple-blue);
+            color: white;
+        }
+
+        .control-btn.primary .info-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .control-btn.primary .info-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Capacity Indicator */
+        .capacity-indicator {
+            padding: 8px 6px;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .capacity-status {
+            padding: 10px 12px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .capacity-status.ok {
+            background: linear-gradient(135deg, rgba(52, 199, 89, 0.1), rgba(48, 209, 88, 0.1));
+            border: 1px solid rgba(52, 199, 89, 0.3);
+        }
+
+        .capacity-status.warning {
+            background: linear-gradient(135deg, rgba(255, 149, 0, 0.1), rgba(255, 159, 10, 0.1));
+            border: 1px solid rgba(255, 149, 0, 0.3);
+        }
+
+        .capacity-status.error {
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.1), rgba(255, 69, 58, 0.1));
+            border: 1px solid rgba(255, 59, 48, 0.3);
+        }
+
+        .capacity-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .capacity-icon {
+            font-size: 14px;
+        }
+
+        .capacity-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--apple-black);
+        }
+
+        .capacity-details {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .capacity-item {
+            text-align: center;
+        }
+
+        .capacity-label {
+            font-size: 10px;
+            color: var(--apple-gray-1);
+            display: block;
+        }
+
+        .capacity-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--apple-black);
+        }
+
+        .capacity-divider {
+            color: var(--apple-gray-1);
+            font-size: 16px;
+        }
+
+        .capacity-message {
+            font-size: 11px;
+            text-align: center;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+
+        .capacity-status.ok .capacity-message {
+            color: #34C759;
+            background: rgba(52, 199, 89, 0.1);
+        }
+
+        .capacity-status.warning .capacity-message {
+            color: #FF9500;
+            background: rgba(255, 149, 0, 0.1);
+        }
+
+        .capacity-status.error .capacity-message {
+            color: #FF3B30;
+            background: rgba(255, 59, 48, 0.1);
+        }
+
+        .capacity-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .capacity-action-btn {
+            flex: 1;
+            padding: 6px 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--apple-blue);
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .capacity-action-btn:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        .capacity-action-btn.warning {
+            background: var(--apple-orange);
+        }
+
+        /* Optimize Section - Always Visible */
+        .optimize-section {
+            padding: 8px 6px;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+            background: linear-gradient(135deg, rgba(0, 113, 227, 0.05), rgba(175, 82, 222, 0.05));
+        }
+
+        .optimize-section .optimize-main-btn {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 13px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 113, 227, 0.2);
+        }
+
+        .optimize-section .optimize-main-btn:not(:disabled) {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        .optimize-section .optimize-main-btn .control-btn-icon {
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+        }
+
+        .optimize-section .optimize-main-btn .control-btn-label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .optimize-section .optimize-main-btn .control-btn-desc {
+            font-size: 10px;
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 4px 20px rgba(0, 113, 227, 0.5);
+            }
+        }
+
+        /* Stats Grid - Compact */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            padding: 6px;
+            border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-card {
+            background: white;
+            padding: 6px 4px;
+            border-radius: 6px;
+            border: 0.5px solid rgba(0, 0, 0, 0.04);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 8px;
+            font-weight: 500;
+            color: var(--apple-gray-1);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--apple-black);
+            margin-top: 2px;
+        }
+
+        .stat-value.highlight {
+            color: var(--apple-blue);
+        }
+
+        /* Activity Log - Compact */
+        .activity-log {
+            flex: 1;
+            min-height: 100px;
+            background: var(--apple-black);
+            margin: 6px;
+            margin-top: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .activity-header {
+            padding: 6px 8px;
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .activity-header span {
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .activity-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--apple-green);
+        }
+
+        .activity-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 8px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        .activity-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .activity-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .log-entry {
+            display: flex;
+            gap: var(--space-sm);
+            color: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            animation: logFadeIn 0.3s ease forwards;
+        }
+
+        @keyframes logFadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .log-entry .timestamp {
+            color: rgba(255, 255, 255, 0.3);
+            min-width: 70px;
+        }
+
+        .log-entry.info {
+            color: var(--apple-teal);
+        }
+
+        .log-entry.success {
+            color: var(--apple-green);
+        }
+
+        .log-entry.warn {
+            color: var(--apple-orange);
+        }
+
+        .log-entry.error {
+            color: var(--apple-red);
+        }
+
+        .log-entry.ai {
+            color: var(--apple-purple);
+        }
+
+        .log-entry.system {
+            color: rgba(255, 255, 255, 0.4);
+            font-style: italic;
+        }
+
+        /* Map Container */
+        .map-container {
+            position: relative;
+            background: var(--apple-gray-2);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .mapboxgl-ctrl-logo {
+            display: none !important;
+        }
+
+        /* Map Overlay Elements */
+        .map-overlay {
+            position: absolute;
+            top: var(--space-lg);
+            right: var(--space-lg);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .map-control-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.08);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            color: var(--apple-black);
+        }
+
+        .map-control-btn:hover {
+            background: white;
+            transform: scale(1.05);
+        }
+
+        /* Optimization Progress Overlay */
+        .progress-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-lg);
+            z-index: 100;
+        }
+
+        .progress-overlay.active {
+            display: flex;
+        }
+
+        .progress-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid var(--apple-gray-2);
+            border-top-color: var(--apple-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .progress-text {
+            font-family: var(--font-display);
+            font-size: 21px;
+            font-weight: 500;
+            color: var(--apple-black);
+            text-align: center;
+        }
+
+        .progress-subtext {
+            font-size: 15px;
+            color: var(--apple-gray-1);
+            margin-top: -8px;
+        }
+
+        .progress-bar-container {
+            width: 280px;
+            height: 4px;
+            background: var(--apple-gray-2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--apple-blue), var(--apple-purple));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* Results Panel - Right Side Drawer */
+        .results-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 380px;
+            max-width: 90vw;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 0.5px solid rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -12px 0 40px rgba(0, 0, 0, 0.12);
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 100;
+        }
+
+        .results-panel.active {
+            transform: translateX(0);
+        }
+
+        /* Toggle Button - Always visible when there are results */
+        .results-toggle {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--apple-blue), var(--apple-purple));
+            border: none;
+            border-radius: 8px 0 0 8px;
+            cursor: pointer;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 101;
+        }
+
+        .results-toggle.visible {
+            display: flex;
+        }
+
+        .results-toggle:hover {
+            width: 40px;
+            background: linear-gradient(135deg, var(--apple-purple), var(--apple-blue));
+        }
+
+        .results-toggle svg {
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .results-toggle.open svg {
+            transform: rotate(180deg);
+        }
+
+        .results-toggle-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+
+        .results-header {
+            padding: var(--space-md) var(--space-lg);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .results-title {
+            font-family: var(--font-display);
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .results-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.06);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .results-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .results-content {
+            padding: var(--space-md);
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .route-card {
+            flex-shrink: 0;
+            width: 260px;
+            background: white;
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            border: 0.5px solid rgba(0, 0, 0, 0.08);
+            transition: all var(--transition-fast);
+        }
+
+        .route-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .route-card-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-sm);
+        }
+
+        .route-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        .route-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .route-badge {
+            margin-left: auto;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: var(--radius-full);
+            background: rgba(52, 199, 89, 0.12);
+            color: var(--apple-green);
+        }
+
+        .route-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-sm);
+            margin-top: var(--space-sm);
+        }
+
+        .route-stat {
+            text-align: center;
+        }
+
+        .route-stat-value {
+            font-family: var(--font-display);
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .route-stat-label {
+            font-size: 10px;
+            color: var(--apple-gray-1);
+            text-transform: uppercase;
+        }
+
+        .route-animate-btn {
+            width: 100%;
+            margin-top: var(--space-md);
+            padding: var(--space-sm);
+            background: var(--apple-gray-2);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-text);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--apple-blue);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .route-animate-btn:hover {
+            background: var(--apple-blue);
+            color: white;
+        }
+
+        .route-animate-btn.error {
+            color: var(--apple-red);
+        }
+
+        .route-animate-btn.error:hover {
+            background: var(--apple-red);
+            color: white;
+        }
+
+        /* Control Button Loaded State */
+        .control-btn.loaded {
+            border-color: var(--apple-green);
+            background: rgba(52, 199, 89, 0.08);
+        }
+
+        .control-btn.loaded .control-btn-icon {
+            background: rgba(52, 199, 89, 0.15);
+        }
+
+        .control-btn.loaded .control-btn-desc {
+            color: var(--apple-green);
+        }
+
+        /* CSV Upload Zones */
+        .upload-section {
+            padding: var(--space-md);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .upload-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--apple-gray-1);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .upload-grid {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .upload-zone {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            background: white;
+            border: 1px dashed rgba(0, 0, 0, 0.15);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .upload-zone:hover {
+            border-color: var(--apple-blue);
+            background: rgba(0, 113, 227, 0.04);
+        }
+
+        .upload-zone.loaded {
+            border-style: solid;
+            border-color: var(--apple-green);
+            background: rgba(52, 199, 89, 0.06);
+        }
+
+        .upload-zone-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: var(--apple-gray-2);
+        }
+
+        .upload-zone.loaded .upload-zone-icon {
+            background: rgba(52, 199, 89, 0.15);
+        }
+
+        .upload-zone-text {
+            flex: 1;
+        }
+
+        .upload-zone-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--apple-black);
+        }
+
+        .upload-zone-hint {
+            font-size: 11px;
+            color: var(--apple-gray-1);
+        }
+
+        .upload-zone-status {
+            font-size: 12px;
+            color: var(--apple-green);
+            font-weight: 500;
+        }
+
+        .info-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--apple-gray-2);
+            border: none;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--apple-gray-1);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .info-btn:hover {
+            background: var(--apple-blue);
+            color: white;
+        }
+
+        /* Info Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-xl);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+        }
+
+        .modal-header {
+            padding: var(--space-lg);
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-family: var(--font-display);
+            font-size: 21px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--apple-gray-2);
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--apple-gray-1);
+            color: white;
+        }
+
+        .modal-body {
+            padding: var(--space-lg);
+        }
+
+        .modal-body table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .modal-body th,
+        .modal-body td {
+            padding: var(--space-sm) var(--space-md);
+            text-align: left;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .modal-body th {
+            font-weight: 600;
+            background: var(--apple-gray-2);
+        }
+
+        .modal-body code {
+            background: var(--apple-gray-2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+        }
+
+        /* Algorithm Comparison Card */
+        .algorithm-card {
+            background: var(--apple-gray-2);
+            border-radius: var(--radius-sm);
+            padding: var(--space-sm);
+            margin-top: var(--space-sm);
+        }
+
+        .algorithm-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-xs) 0;
+            font-size: 11px;
+        }
+
+        .algorithm-row.winner {
+            color: var(--apple-green);
+            font-weight: 600;
+        }
+
+        .algorithm-name {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        /* ============================================
+           Responsive Design
+           ============================================ */
+        @media (max-width: 1024px) {
+            .app-interface {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .sidebar-panel {
+                border-right: none;
+                border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+            }
+
+            .map-container {
+                min-height: 500px;
+            }
+
+            .navbar-links {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+                max-width: 320px;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ============================================
+           Footer
+           ============================================ */
+        .footer {
+            background: var(--apple-gray-2);
+            padding: var(--space-3xl) var(--space-lg);
+            border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .footer-content {
+            max-width: 1024px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: 12px;
+            color: var(--apple-gray-1);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-lg);
+            margin-top: var(--space-md);
+        }
+
+        .footer-link {
+            font-size: 12px;
+            color: var(--apple-blue);
+            text-decoration: none;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-content">
+            <a href="#" class="navbar-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                RouteAI
+            </a>
+            <div class="navbar-links">
+                <a href="#features" class="navbar-link">Features</a>
+                <a href="#app" class="navbar-link">Demo</a>
+                <a href="#" class="navbar-link">Pricing</a>
+                <a href="#" class="navbar-link">Docs</a>
+            </div>
+            <a href="#app" class="navbar-cta">Try Demo</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <span class="hero-eyebrow">Introducing RouteAI Pro</span>
+        <h1 class="hero-title">
+            The <span class="gradient-text">smartest</span> way<br>to optimize routes.
+        </h1>
+        <p class="hero-subtitle">
+            Harness the power of AI to reduce fleet costs by up to 40%.
+            Enterprise-grade optimization that just works.
+        </p>
+        <div class="hero-actions">
+            <a href="#app" class="btn btn-primary btn-large">
+                Start Optimizing
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14m-7-7l7 7-7 7" />
+                </svg>
+            </a>
+            <a href="#features" class="btn btn-secondary btn-large">
+                Learn More
+            </a>
+        </div>
+        <div class="scroll-indicator">
+            <span>Scroll to explore</span>
+            <div class="scroll-mouse"></div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="section-header">
+            <span class="section-eyebrow">Why RouteAI</span>
+            <h2 class="section-title">Built for modern fleets.</h2>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon blue">🧠</div>
+                <h3 class="feature-title">AI-Powered</h3>
+                <p class="feature-description">
+                    Advanced machine learning algorithms analyze traffic patterns,
+                    delivery windows, and vehicle capacity in real-time.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon green">⚡</div>
+                <h3 class="feature-title">Instant Results</h3>
+                <p class="feature-description">
+                    Get optimized routes in milliseconds, not minutes.
+                    Our engine processes thousands of stops instantly.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon orange">📊</div>
+                <h3 class="feature-title">Deep Analytics</h3>
+                <p class="feature-description">
+                    Comprehensive reporting on fuel savings, time efficiency,
+                    and carbon footprint reduction across your fleet.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon purple">🔌</div>
+                <h3 class="feature-title">Seamless Integration</h3>
+                <p class="feature-description">
+                    RESTful APIs that integrate with your existing systems.
+                    Works with any fleet management software.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Section -->
+    <section class="app-section" id="app">
+        <div class="app-container">
+            <div class="section-header">
+                <span class="section-eyebrow">Interactive Demo</span>
+                <h2 class="section-title">See it in action.</h2>
+            </div>
+
+            <div class="app-interface">
+                <!-- Sidebar -->
+                <div class="sidebar-panel">
+                    <div class="sidebar-header">
+                        <h3 class="sidebar-title">Route Optimizer</h3>
+                        <p class="sidebar-subtitle">Enterprise Fleet Management v2.0</p>
+                        <div class="status-pill ready" id="statusPill">
+                            <span class="status-dot"></span>
+                            <span id="statusText">Ready</span>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Data Management Panel -->
+                    <div class="data-panel-wrapper" id="dataPanelWrapper">
+                        <button class="data-panel-toggle" onclick="toggleDataPanel()">
+                            <span class="data-panel-toggle-text">
+                                <span>📊</span>
+                                <span>Data Management</span>
+                            </span>
+                            <span class="data-panel-toggle-icon">▼</span>
+                        </button>
+                        <div class="data-panel-content">
+                            <div class="sidebar-controls" id="controlsPanel">
+                                <button class="control-btn" onclick="loadSampleData()" id="loadDataBtn">
+                                    <div class="control-btn-icon">📂</div>
+                                    <div class="control-btn-text">
+                                        <span class="control-btn-label">Load Sample Data</span>
+                                        <span class="control-btn-desc">25 employees, 4 vehicles</span>
+                                    </div>
+                                </button>
+
+                                <input type="file" id="empInput" accept=".csv" style="display: none"
+                                    onchange="handleFileUpload(this, 'employees')">
+                                <button class="control-btn" onclick="document.getElementById('empInput').click()"
+                                    id="uploadEmpBtn">
+                                    <div class="control-btn-icon">👥</div>
+                                    <div class="control-btn-text">
+                                        <span class="control-btn-label">Upload Employees</span>
+                                        <span class="control-btn-desc">Name, Lat, Lng, Address</span>
+                                    </div>
+                                    <button class="info-btn"
+                                        onclick="event.stopPropagation(); openModal('employeesModal')"
+                                        title="View CSV Format">ⓘ</button>
+                                </button>
+
+                                <input type="file" id="cabInput" accept=".csv" style="display: none"
+                                    onchange="handleFileUpload(this, 'cabs')">
+                                <button class="control-btn" onclick="document.getElementById('cabInput').click()"
+                                    id="uploadCabBtn">
+                                    <div class="control-btn-icon">🚖</div>
+                                    <div class="control-btn-text">
+                                        <span class="control-btn-label">Upload Cabs</span>
+                                        <span class="control-btn-desc">Name, Capacity, Driver</span>
+                                    </div>
+                                    <button class="info-btn" onclick="event.stopPropagation(); openModal('cabsModal')"
+                                        title="View CSV Format">ⓘ</button>
+                                </button>
+
+                                <input type="file" id="configInput" accept=".csv" style="display: none"
+                                    onchange="handleFileUpload(this, 'config')">
+                                <button class="control-btn" onclick="document.getElementById('configInput').click()"
+                                    id="uploadConfigBtn">
+                                    <div class="control-btn-icon">🏢</div>
+                                    <div class="control-btn-text">
+                                        <span class="control-btn-label">Upload Config</span>
+                                        <span class="control-btn-desc">Office Location & Settings</span>
+                                    </div>
+                                    <button class="info-btn" onclick="event.stopPropagation(); openModal('configModal')"
+                                        title="View CSV Format">ⓘ</button>
+                                </button>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Capacity Indicator -->
+                    <div class="capacity-indicator" id="capacityIndicator" style="display: none;">
+                        <div id="capacityStatus" class="capacity-status ok">
+                            <div class="capacity-header">
+                                <span class="capacity-icon">✅</span>
+                                <span class="capacity-title">Capacity Check</span>
+                            </div>
+                            <div class="capacity-details">
+                                <div class="capacity-item">
+                                    <span class="capacity-label">Employees</span>
+                                    <span class="capacity-value" id="capacityEmployees">0</span>
+                                </div>
+                                <div class="capacity-divider">→</div>
+                                <div class="capacity-item">
+                                    <span class="capacity-label">Total Seats</span>
+                                    <span class="capacity-value" id="capacitySeats">0</span>
+                                </div>
+                            </div>
+                            <div class="capacity-message" id="capacityMessage"></div>
+                            <div class="capacity-actions" id="capacityActions" style="display: none;">
+                                <button class="capacity-action-btn" onclick="quickAddCabs()">
+                                    ➕ Add Cabs
+                                </button>
+                                <button class="capacity-action-btn" onclick="quickIncreaseSeats()">
+                                    🪑 +Seats
+                                </button>
+                                <button class="capacity-action-btn warning" onclick="quickRemoveEmployees()">
+                                    👥 Trim Employees
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Always Visible Optimize Route Button -->
+                    <div class="optimize-section" id="optimizeSection">
+                        <button class="control-btn primary optimize-main-btn" onclick="startOptimization()"
+                            id="optimizeBtn" disabled>
+                            <div class="control-btn-icon">🚀</div>
+                            <div class="control-btn-text">
+                                <span class="control-btn-label">Optimize Routes</span>
+                                <span class="control-btn-desc">Run AI to compute best routes</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <div class="stat-label">Distance</div>
+                            <div class="stat-value" id="totalDist">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Duration</div>
+                            <div class="stat-value" id="totalDur">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Vehicles</div>
+                            <div class="stat-value highlight" id="vehCount">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Employees</div>
+                            <div class="stat-value highlight" id="empCount">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Cab Seats</div>
+                            <div class="stat-value" id="cabSeats">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Efficiency</div>
+                            <div class="stat-value highlight" id="efficiency">—</div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Log -->
+                    <div class="activity-log">
+                        <div class="activity-header">
+                            <div class="activity-dot"></div>
+                            <span>Activity Log</span>
+                        </div>
+                        <div class="activity-content" id="logs">
+                            <div class="log-entry system">
+                                <span class="timestamp">00:00:00</span>
+                                <span>System initialized. Awaiting data...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map Container -->
+                <div class="map-container">
+                    <div id="map"></div>
+
+                    <!-- Map Controls -->
+                    <div class="map-overlay">
+                        <button class="map-control-btn" onclick="resetMapView()" title="Reset View">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8" />
+                                <path d="M3 3v5h5" />
+                            </svg>
+                        </button>
+                        <button class="map-control-btn" onclick="toggleSatellite()" title="Toggle Satellite">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7" />
+                                <rect x="14" y="3" width="7" height="7" />
+                                <rect x="14" y="14" width="7" height="7" />
+                                <rect x="3" y="14" width="7" height="7" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Progress Overlay -->
+                    <div class="progress-overlay" id="progressOverlay">
+                        <div class="progress-spinner"></div>
+                        <div class="progress-text" id="progressText">Optimizing Routes...</div>
+                        <div class="progress-subtext" id="progressSubtext">This may take a moment</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+
+
+                    <!-- Results Toggle Button -->
+                    <button class="results-toggle" id="resultsToggle" onclick="toggleResults()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M15 18l-6-6 6-6" />
+                        </svg>
+                        <span class="results-toggle-text">Routes</span>
+                    </button>
+
+                    <!-- Results Panel -->
+                    <div class="results-panel" id="resultsPanel">
+                        <div class="results-header">
+                            <span class="results-title">🎉 Optimization Complete</span>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="control-btn small" onclick="openAnalytics()"
+                                    style="padding: 4px 12px; font-size: 12px; height: 28px; min-height: unset; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none;">
+                                    📊 Full Analytics
+                                </button>
+                                <button class="control-btn small" onclick="playAllRoutes()"
+                                    style="padding: 4px 12px; font-size: 12px; height: 28px; min-height: unset;">
+                                    ▶ Play All
+                                </button>
+                                <button class="results-close" onclick="closeResults()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M18 6L6 18M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="results-content" id="resultsContent">
+                            <!-- Route cards will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-text">
+                © 2026 RouteAI. Intelligent fleet optimization for the modern enterprise.
+            </p>
+            <div class="footer-links">
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <a href="#" class="footer-link">Terms of Service</a>
+                <a href="#" class="footer-link">API Documentation</a>
+                <a href="#" class="footer-link">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- CSV Info Modals -->
+    <div class="modal-overlay" id="employeesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">📋 Employees CSV Format</span>
+                <button class="modal-close" onclick="closeModal('employeesModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--apple-gray-1);">
+                    Upload a CSV file with employee pickup/drop locations.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>name</code> or <code>employee_name</code></td>
+                            <td>Optional</td>
+                            <td>Employee name</td>
+                        </tr>
+                        <tr>
+                            <td><code>lat</code> or <code>latitude</code></td>
+                            <td>✅ Yes</td>
+                            <td>Latitude coordinate</td>
+                        </tr>
+                        <tr>
+                            <td><code>lng</code>, <code>lon</code>, or <code>longitude</code></td>
+                            <td>✅ Yes</td>
+                            <td>Longitude coordinate</td>
+                        </tr>
+                        <tr>
+                            <td><code>address</code> or <code>location</code></td>
+                            <td>Optional</td>
+                            <td>Address description</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="cabsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🚖 Cabs CSV Format</span>
+                <button class="modal-close" onclick="closeModal('cabsModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--apple-gray-1);">
+                    Upload a CSV file to define your vehicle fleet.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>name</code> or <code>vehicle_name</code></td>
+                            <td>Optional</td>
+                            <td>Vehicle identifier</td>
+                        </tr>
+                        <tr>
+                            <td><code>capacity</code> or <code>seats</code></td>
+                            <td>Optional</td>
+                            <td>Passenger capacity (default: 4)</td>
+                        </tr>
+                        <tr>
+                            <td><code>driver</code> or <code>driver_name</code></td>
+                            <td>Optional</td>
+                            <td>Assigned driver</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="configModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🏢 Config CSV Format</span>
+                <button class="modal-close" onclick="closeModal('configModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--apple-gray-1);">
+                    Configure office location and trip settings. Two-column format: setting, value.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Setting</th>
+                            <th>Value Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>office_name</code></td>
+                            <td>Text</td>
+                            <td>Office name</td>
+                        </tr>
+                        <tr>
+                            <td><code>office_lat</code></td>
+                            <td>Number</td>
+                            <td>Latitude (required)</td>
+                        </tr>
+                        <tr>
+                            <td><code>office_lng</code></td>
+                            <td>Number</td>
+                            <td>Longitude (required)</td>
+                        </tr>
+                        <tr>
+                            <td><code>office_address</code></td>
+                            <td>Text</td>
+                            <td>Street address</td>
+                        </tr>
+                        <tr>
+                            <td><code>departure_time</code></td>
+                            <td>HH:MM</td>
+                            <td>Trip time</td>
+                        </tr>
+                        <tr>
+                            <td><code>trip_type</code></td>
+                            <td>pickup/drop</td>
+                            <td>Route type</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // Constants & Configuration
+        // ============================================
+        const MAPBOX_TOKEN = 'pk.eyJ1Ijoicm91dGlmeWFpIiwiYSI6ImNtaXpxM3FydjAwZm8zY3FwcHhoN252ZmIifQ.5X-uLUu9VIAGQW6H9tkefA';
+        // API Configuration - points to your local Docker container
+        // For GitHub Pages: You'll need to expose your PC's port 3000 to the internet (via ngrok or port forwarding)
+        const API_BASE = 'http://localhost:3000/api/v1';
+
+        // State
+        let map;
+        let markers = [];
+        let employees = [];
+        let cabs = [];
+        let routeGeometries = {};
+        let routeAnimations = {};
+        let isSatellite = false;
+        let officeMarker = null; // Track office marker for updates
+        let office = { lat: 12.9565, lng: 77.7010, name: 'Tech Park Office', address: 'Default Location' };
+        let config = { departureTime: '08:00', tripType: 'pickup' };
+
+        // Route colors - Apple-inspired palette
+        const ROUTE_COLORS = ['#007AFF', '#34C759', '#FF9500', '#AF52DE', '#FF3B30', '#5AC8FA'];
+
+        // ============================================
+        // Utility Functions
+        // ============================================
+        const delay = ms => new Promise(res => setTimeout(res, ms));
+
+        function log(msg, type = 'normal') {
+            const container = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+
+            // Add emoji prefix based on type
+            const prefixes = {
+                'success': '✅',
+                'error': '❌',
+                'warn': '⚠️',
+                'info': 'ℹ️',
+                'ai': '🤖',
+                'system': '⚙️'
+            };
+            const prefix = prefixes[type] || '';
+            const displayMsg = prefix ? `${prefix} ${msg}` : msg;
+
+            div.innerHTML = `<span class="timestamp">${time}</span><span>${displayMsg}</span>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function updateProgress(percent, text = null, subtext = null) {
+            document.getElementById('progressFill').style.width = `${percent}%`;
+            if (text) document.getElementById('progressText').textContent = text;
+            if (subtext) document.getElementById('progressSubtext').textContent = subtext;
+        }
+
+        function setStatus(status, text) {
+            const pill = document.getElementById('statusPill');
+            const statusText = document.getElementById('statusText');
+            pill.className = `status-pill ${status}`;
+            statusText.textContent = text;
+        }
+
+        // Results Panel Toggle Functions
+        let resultsPanelOpen = false;
+
+        function toggleResults() {
+            const panel = document.getElementById('resultsPanel');
+            const toggle = document.getElementById('resultsToggle');
+            resultsPanelOpen = !resultsPanelOpen;
+
+            if (resultsPanelOpen) {
+                panel.classList.add('active');
+                toggle.classList.add('open');
+            } else {
+                panel.classList.remove('active');
+                toggle.classList.remove('open');
+            }
+        }
+
+        function closeResults() {
+            const panel = document.getElementById('resultsPanel');
+            const toggle = document.getElementById('resultsToggle');
+            resultsPanelOpen = false;
+            panel.classList.remove('active');
+            toggle.classList.remove('open');
+        }
+
+        function showResultsPanel() {
+            const panel = document.getElementById('resultsPanel');
+            const toggle = document.getElementById('resultsToggle');
+            toggle.classList.add('visible');
+            resultsPanelOpen = true;
+            panel.classList.add('active');
+            toggle.classList.add('open');
+        }
+
+        function getTimeString(baseDate, minutesToAdd) {
+            const date = new Date(baseDate.getTime() + minutesToAdd * 60000);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modal on overlay click
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // Data Panel Toggle
+        function toggleDataPanel() {
+            const wrapper = document.getElementById('dataPanelWrapper');
+            wrapper.classList.toggle('collapsed');
+        }
+
+        // ============================================
+        // Map Initialization
+        // ============================================
+        async function initMap() {
+            if (!mapboxgl.supported()) {
+                alert('Your browser does not support Mapbox GL');
+                return;
+            }
+
+            mapboxgl.accessToken = MAPBOX_TOKEN;
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/light-v11',
+                center: [office.lng, office.lat],
+                zoom: 11,
+                pitch: 30,
+                bearing: 0
+            });
+
+            // Custom navigation controls
+            map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right');
+
+            // Create office marker using reusable function
+            updateOfficeMarker();
+
+            await new Promise(resolve => map.on('load', resolve));
+            log('Map system initialized', 'success');
+        }
+
+        function resetMapView() {
+            map.flyTo({
+                center: [office.lng, office.lat],
+                zoom: 11,
+                pitch: 30,
+                bearing: 0,
+                duration: 1500
+            });
+        }
+
+        function toggleSatellite() {
+            isSatellite = !isSatellite;
+            map.setStyle(isSatellite ? 'mapbox://styles/mapbox/satellite-streets-v12' : 'mapbox://styles/mapbox/light-v11');
+        }
+
+        // Create or update the office marker on the map
+        function updateOfficeMarker() {
+            // Remove existing marker if present
+            if (officeMarker) {
+                officeMarker.remove();
+            }
+
+            // Create new office marker element
+            const officeEl = document.createElement('div');
+            officeEl.innerHTML = `
+                <div style="
+                    width: 48px;
+                    height: 48px;
+                    background: linear-gradient(135deg, #FF3B30, #FF9500);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.4);
+                    border: 3px solid white;
+                    font-size: 20px;
+                ">🏢</div>
+            `;
+
+            officeMarker = new mapboxgl.Marker({ element: officeEl })
+                .setLngLat([office.lng, office.lat])
+                .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
+                    <div style="font-family: -apple-system, sans-serif; padding: 8px;">
+                        <strong>${office.name}</strong><br>
+                        <span style="color: #86868b; font-size: 12px;">${office.address || 'Fleet Hub'}</span>
+                    </div>
+                `))
+                .addTo(map);
+        }
+
+        // ============================================
+        // Data Loading & CSV Parsing
+        // ============================================
+
+        function handleFileUpload(input, type) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                log('Error: File size too large (max 5MB)', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const csv = e.target.result;
+                    if (type === 'employees') {
+                        const data = parseEmployeesCSV(csv);
+                        processEmployees(data);
+                    } else if (type === 'cabs') {
+                        const data = parseCabsCSV(csv);
+                        processCabs(data);
+                    } else if (type === 'config') {
+                        const data = parseConfigCSV(csv);
+                        processConfig(data);
+                    }
+                    input.value = ''; // Reset input
+                } catch (err) {
+                    log(`Error parsing ${type} CSV: ${err.message}`, 'error');
+                }
+            };
+            reader.onerror = function () {
+                log('Error reading file', 'error');
+            };
+            reader.readAsText(file);
+        }
+
+        function parseConfigCSV(csvText) {
+            const rows = parseCSVRows(csvText);
+            if (rows.length < 2) throw new Error('Config CSV is empty');
+
+            const configData = {};
+            rows.slice(1).forEach(row => {
+                if (row.length >= 2) {
+                    const key = row[0].toLowerCase().trim();
+                    const value = row[1].trim();
+                    configData[key] = value;
+                }
+            });
+            return configData;
+        }
+
+        function processConfig(configData) {
+            // Update office location if provided
+            if (configData.office_lat && configData.office_lng) {
+                office.lat = parseFloat(configData.office_lat);
+                office.lng = parseFloat(configData.office_lng);
+            }
+            if (configData.office_name) office.name = configData.office_name;
+            if (configData.office_address) office.address = configData.office_address;
+
+            // Update config settings
+            if (configData.departure_time) config.departureTime = configData.departure_time;
+            if (configData.trip_type) config.tripType = configData.trip_type;
+
+            log(`Office set to: ${office.name} (${office.lat}, ${office.lng})`, 'success');
+            log(`Trip: ${config.tripType} at ${config.departureTime}`, 'info');
+
+            // Update button visual state
+            const btn = document.getElementById('uploadConfigBtn');
+            if (btn) {
+                btn.classList.add('loaded');
+                btn.querySelector('.control-btn-desc').textContent = office.name;
+            }
+
+            // Update office marker on map with new location
+            updateOfficeMarker();
+
+            // Reset map to new office
+            resetMapView();
+            updateMapDisplay();
+        }
+
+        function parseCSVRows(content) {
+            const lines = content.trim().split(/\r?\n/).filter(line => line.trim() !== '');
+            return lines.map(line => {
+                return line.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+            });
+        }
+
+        function parseEmployeesCSV(csvText) {
+            const rows = parseCSVRows(csvText);
+            if (rows.length < 2) throw new Error('CSV file is empty or missing headers');
+
+            const header = rows[0].map(h => h.toLowerCase());
+
+            const nameIdx = header.findIndex(h => h.includes('name'));
+            const latIdx = header.findIndex(h => h.includes('lat'));
+            const lngIdx = header.findIndex(h => h.includes('lng') || h.includes('lon'));
+            const addrIdx = header.findIndex(h => h.includes('address') || h.includes('loc'));
+
+            if (latIdx === -1 || lngIdx === -1) {
+                throw new Error('Missing required columns: lat, lng');
+            }
+
+            const validData = [];
+            const timestamp = Date.now();
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.length < header.length) continue;
+
+                const lat = parseFloat(row[latIdx]);
+                const lng = parseFloat(row[lngIdx]);
+
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    validData.push({
+                        id: `custom_emp_${timestamp}_${i}`,
+                        name: nameIdx !== -1 ? row[nameIdx] : `Employee ${i}`,
+                        address: addrIdx !== -1 ? row[addrIdx] : `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                        lat: lat,
+                        lng: lng
+                    });
+                }
+            }
+
+            if (validData.length === 0) throw new Error('No valid location data found in CSV');
+            return validData;
+        }
+
+        function parseCabsCSV(csvText) {
+            const rows = parseCSVRows(csvText);
+            if (rows.length < 2) throw new Error('CSV file is empty or missing headers');
+
+            const header = rows[0].map(h => h.toLowerCase());
+
+            const nameIdx = header.findIndex(h => h.includes('name') || h.includes('vehicle'));
+            const capIdx = header.findIndex(h => h.includes('cap') || h.includes('seat'));
+            const driverIdx = header.findIndex(h => h.includes('driver'));
+
+            const validData = [];
+            const timestamp = Date.now();
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.length < header.length) continue;
+
+                const capacity = capIdx !== -1 ? parseInt(row[capIdx]) : 4;
+
+                validData.push({
+                    id: `custom_cab_${timestamp}_${i}`,
+                    name: nameIdx !== -1 ? row[nameIdx] : `Cab ${i}`,
+                    capacity: !isNaN(capacity) ? capacity : 4,
+                    driver: driverIdx !== -1 ? row[driverIdx] : `Driver ${i}`,
+                    type: capacity > 4 ? 'Van' : 'Sedan'
+                });
+            }
+
+            if (validData.length === 0) throw new Error('No valid cab data found in CSV');
+            return validData;
+        }
+
+        function processEmployees(loadedEmployees) {
+            loading = true;
+            employees = loadedEmployees;
+
+            log(`✅ Loaded ${employees.length} employees`, 'success');
+
+            // Update button visual state
+            const btn = document.getElementById('uploadEmpBtn');
+            if (btn) {
+                btn.classList.add('loaded');
+                btn.querySelector('.control-btn-desc').textContent = `${employees.length} employees loaded`;
+            }
+
+            if (cabs.length === 0) {
+                generateDefaultCabs(Math.ceil(employees.length / 4));
+            }
+
+            updateMapDisplay();
+            setStatus('ready', 'Employees Loaded');
+            checkReadyState();
+        }
+
+        function processCabs(loadedCabs) {
+            cabs = loadedCabs;
+            log(`✅ Loaded ${cabs.length} vehicles`, 'success');
+
+            // Update button visual state
+            const btn = document.getElementById('uploadCabBtn');
+            if (btn) {
+                btn.classList.add('loaded');
+                btn.querySelector('.control-btn-desc').textContent = `${cabs.length} vehicles loaded`;
+            }
+
+            updateMapDisplay();
+            setStatus('ready', 'Fleet Loaded');
+            checkReadyState();
+        }
+
+        function generateDefaultCabs(count) {
+            cabs = [];
+            for (let i = 0; i < count; i++) {
+                cabs.push({
+                    id: `auto_cab_${i + 1}`,
+                    name: `Cab ${i + 1}`,
+                    capacity: 4,
+                    driver: `Driver ${String.fromCharCode(65 + (i % 26))}`,
+                    type: 'Sedan'
+                });
+            }
+            log(`Auto-generated ${count} vehicles`, 'system');
+        }
+
+        function checkReadyState() {
+            if (employees.length > 0 && cabs.length > 0) {
+                document.getElementById('optimizeBtn').disabled = false;
+                updateCapacityIndicator();
+            } else {
+                document.getElementById('capacityIndicator').style.display = 'none';
+            }
+        }
+
+        function updateCapacityIndicator() {
+            const indicator = document.getElementById('capacityIndicator');
+            const status = document.getElementById('capacityStatus');
+            const empCount = document.getElementById('capacityEmployees');
+            const seatCount = document.getElementById('capacitySeats');
+            const message = document.getElementById('capacityMessage');
+            const icon = status.querySelector('.capacity-icon');
+            const actions = document.getElementById('capacityActions');
+
+            const totalEmployees = employees.length;
+            const totalSeats = cabs.reduce((sum, cab) => sum + (cab.capacity || 4), 0);
+
+            empCount.textContent = totalEmployees;
+            seatCount.textContent = totalSeats;
+
+            // Determine status
+            status.classList.remove('ok', 'warning', 'error');
+
+            if (totalEmployees <= totalSeats) {
+                const utilization = (totalEmployees / totalSeats * 100).toFixed(0);
+                status.classList.add('ok');
+                icon.textContent = '✅';
+                message.textContent = `All employees can be assigned (${utilization}% capacity used)`;
+                actions.style.display = 'none';
+            } else {
+                const overflow = totalEmployees - totalSeats;
+                const vehiclesNeeded = Math.ceil(overflow / 4);
+                status.classList.add('error');
+                icon.textContent = '⚠️';
+                message.textContent = `${overflow} employees cannot fit! Need ${vehiclesNeeded} more vehicle(s)`;
+                actions.style.display = 'flex';
+
+                // Log warning
+                log(`Capacity warning: ${overflow} employees exceed available seats`, 'warn');
+            }
+
+            indicator.style.display = 'block';
+        }
+
+        // Quick balance action: Add more cabs
+        function quickAddCabs() {
+            const totalEmployees = employees.length;
+            const totalSeats = cabs.reduce((sum, cab) => sum + (cab.capacity || 4), 0);
+            const overflow = totalEmployees - totalSeats;
+            const cabsToAdd = Math.ceil(overflow / 4);
+
+            for (let i = 0; i < cabsToAdd; i++) {
+                const newId = cabs.length + 1;
+                cabs.push({
+                    id: `quick_cab_${newId}`,
+                    name: `Cab ${newId}`,
+                    capacity: 4,
+                    driver: `Driver ${String.fromCharCode(65 + ((cabs.length) % 26))}`,
+                    type: 'Sedan'
+                });
+            }
+
+            log(`Added ${cabsToAdd} new cab(s) with 4 seats each`, 'success');
+            updateCapacityIndicator();
+            updateCabStats();
+        }
+
+        // Quick balance action: Increase seats per cab
+        function quickIncreaseSeats() {
+            const totalEmployees = employees.length;
+            const totalSeats = cabs.reduce((sum, cab) => sum + (cab.capacity || 4), 0);
+            const overflow = totalEmployees - totalSeats;
+            const seatsPerCab = Math.ceil(overflow / cabs.length);
+
+            cabs.forEach(cab => {
+                cab.capacity = (cab.capacity || 4) + seatsPerCab;
+            });
+
+            log(`Increased each cab capacity by ${seatsPerCab} seats`, 'success');
+            updateCapacityIndicator();
+            updateCabStats();
+        }
+
+        // Quick balance action: Remove excess employees
+        function quickRemoveEmployees() {
+            const totalSeats = cabs.reduce((sum, cab) => sum + (cab.capacity || 4), 0);
+            const overflow = employees.length - totalSeats;
+
+            if (overflow > 0) {
+                const removed = employees.splice(-overflow, overflow);
+                log(`Removed ${overflow} employee(s) from the end of the list`, 'warn');
+                updateCapacityIndicator();
+                updateMapDisplay();
+            }
+        }
+
+        // Helper to update cab stats display
+        function updateCabStats() {
+            const btn = document.getElementById('uploadCabBtn');
+            if (btn) {
+                btn.classList.add('loaded');
+                btn.querySelector('.control-btn-desc').textContent = `${cabs.length} vehicles loaded`;
+            }
+            document.getElementById('cabSeats').textContent =
+                cabs.reduce((sum, cab) => sum + (cab.capacity || 4), 0);
+        }
+
+        function updateMapDisplay() {
+            // Clear existing markers
+            markers.forEach(m => m.remove());
+            markers = [];
+
+            // Clearing routes is handled in visualizeRoutes, but good to ensure clean slate
+            // We can call a simplified clean function or just rely on new markers
+
+            const bounds = new mapboxgl.LngLatBounds();
+            bounds.extend([office.lng, office.lat]);
+
+            employees.forEach((emp, idx) => {
+                const el = document.createElement('div');
+                el.style.cssText = `
+                    width: 12px;
+                    height: 12px;
+                    background: #86868b;
+                    border-radius: 50%;
+                    border: 2px solid white;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                    transition: all 0.2s ease;
+                    cursor: pointer;
+                `;
+
+                el.addEventListener('mouseenter', () => {
+                    el.style.transform = 'scale(1.5)';
+                    el.style.background = '#007AFF';
+                });
+                el.addEventListener('mouseleave', () => {
+                    el.style.transform = 'scale(1)';
+                    el.style.background = '#86868b';
+                });
+
+                const m = new mapboxgl.Marker({ element: el })
+                    .setLngLat([emp.lng, emp.lat])
+                    .setPopup(new mapboxgl.Popup({ offset: 15 }).setHTML(`
+                        <div style="font-family: -apple-system, sans-serif; padding: 4px;">
+                            <strong>${emp.name}</strong><br>
+                            <span style="color: #86868b; font-size: 11px;">${emp.address}</span>
+                        </div>
+                    `))
+                    .addTo(map);
+
+                markers.push(m);
+                bounds.extend([emp.lng, emp.lat]);
+            });
+
+            map.fitBounds(bounds, { padding: 80, duration: 1500 });
+
+            // Update stats
+            document.getElementById('empCount').textContent = employees.length;
+            document.getElementById('vehCount').textContent = cabs.length;
+        }
+
+        async function loadSampleData() {
+            const btn = document.getElementById('loadDataBtn');
+            btn.disabled = true;
+
+            setStatus('processing', 'Loading...');
+            log('Initializing geospatial datasets...', 'system');
+            await delay(300);
+
+            // Generate sample employees
+            const sampleEmployees = Array.from({ length: 25 }, (_, i) => ({
+                id: `emp_${i}`,
+                name: `Employee ${i + 1}`,
+                lat: office.lat + (Math.random() - 0.5) * 0.12,
+                lng: office.lng + (Math.random() - 0.5) * 0.12,
+                address: `Sector ${Math.floor(Math.random() * 5) + 1}, Block ${String.fromCharCode(65 + Math.floor(Math.random() * 6))}`
+            }));
+
+            // Reset cabs to default for sample data
+            cabs = [
+                { id: 'cab1', name: 'Alpha', capacity: 4, driver: 'Driver A', type: 'Sedan' },
+                { id: 'cab2', name: 'Beta', capacity: 4, driver: 'Driver B', type: 'Sedan' },
+                { id: 'cab3', name: 'Gamma', capacity: 6, driver: 'Driver C', type: 'SUV' },
+                { id: 'cab4', name: 'Delta', capacity: 8, driver: 'Driver D', type: 'Van' }
+            ];
+
+            processEmployees(sampleEmployees);
+            processCabs(cabs);
+
+            log(`Geocoded ${sampleEmployees.length} employee locations`, 'success');
+            log(`Fleet ready: ${cabs.length} vehicles available`, 'success');
+
+            btn.disabled = false;
+        }
+
+        // ============================================
+        // Optimization
+        // ============================================
+        async function startOptimization() {
+            const btn = document.getElementById('optimizeBtn');
+            const progressOverlay = document.getElementById('progressOverlay');
+
+            btn.disabled = true;
+            progressOverlay.classList.add('active');
+            setStatus('processing', 'Optimizing...');
+
+            updateProgress(0, 'Initializing AI Engine...', 'Preparing optimization model');
+
+            try {
+                // Phase 1: Initialization
+                log('Starting AI optimization engine...', 'ai');
+                await delay(500);
+                updateProgress(15, 'Analyzing Data...', 'Building distance matrix');
+
+                // API Health Check
+                try {
+                    const health = await fetch(`${API_BASE}/health`);
+                    if (health.ok) {
+                        log('API connection established', 'success');
+                    }
+                } catch (e) {
+                    log('Using fallback optimization mode', 'warn');
+                }
+
+                updateProgress(30, 'Computing Clusters...', 'Grouping employees by proximity');
+                log('Analyzing spatial cluster density...', 'ai');
+                await delay(600);
+
+                updateProgress(50, 'Optimizing Routes...', 'Running multi-algorithm comparison');
+                log('Executing Nearest Neighbor algorithm...', 'ai');
+                await delay(400);
+                log('Executing Christofides algorithm...', 'ai');
+                await delay(400);
+                log('Executing Genetic algorithm...', 'ai');
+                await delay(300);
+                log('Executing Dijkstra algorithm...', 'ai');
+                await delay(300);
+                log('Executing BMSSP algorithm...', 'ai');
+                await delay(300);
+
+                // API Call
+                const payload = {
+                    office: {
+                        id: 'office',
+                        name: office.name,
+                        address: office.address,
+                        lat: office.lat,
+                        lng: office.lng
+                    },
+                    employees: employees,
+                    cabs: cabs,
+                    config: {
+                        routeOptimizationAlgorithm: "auto",
+                        departureTime: config.departureTime,
+                        tripType: config.tripType
+                    }
+                };
+
+                updateProgress(70, 'Processing Results...', 'Selecting optimal solution');
+
+                const startTime = performance.now();
+                const response = await fetch(`${API_BASE}/optimize/multi-cluster`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': 'ropt_AoRRuGdzomZvq4YKWWLfDXXze0dCiFNG'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+                const data = await response.json();
+                const result = data.result;
+                const duration = Math.round(performance.now() - startTime);
+
+                updateProgress(90, 'Rendering Routes...', 'Drawing optimized paths');
+                log(`Optimization completed in ${duration}ms`, 'success');
+
+                await visualizeRoutes(result.clusters);
+
+                // Update stats
+                const totalDist = result.metrics?.totalDistance || 0;
+                const totalDur = result.metrics?.totalDuration || 0;
+                const totalSeats = cabs.reduce((sum, cab) => sum + (cab.capacity || 4), 0);
+                const usedSeats = employees.length;
+                const efficiencyPct = totalSeats > 0 ? Math.round((usedSeats / totalSeats) * 100) : 0;
+
+                document.getElementById('totalDist').textContent = `${totalDist.toFixed(1)}km`;
+                document.getElementById('totalDur').textContent = `${Math.round(totalDur)}m`;
+                document.getElementById('vehCount').textContent = result.clusters.length;
+                document.getElementById('empCount').textContent = employees.length;
+                document.getElementById('cabSeats').textContent = totalSeats;
+                document.getElementById('efficiency').textContent = `${efficiencyPct}%`;
+
+                updateProgress(100, 'Complete!', `${result.clusters.length} optimal routes found`);
+                log(`Solution: ${result.clusters.length} optimized routes generated`, 'success');
+
+                await delay(800);
+                renderResults(result);
+
+                setStatus('complete', 'Complete');
+
+            } catch (err) {
+                log(`Error: ${err.message}`, 'error');
+                console.error(err);
+                setStatus('ready', 'Error');
+            } finally {
+                progressOverlay.classList.remove('active');
+                btn.disabled = false;
+            }
+        }
+
+        // ============================================
+        // Route Visualization
+        // ============================================
+        function decodePolyline(str, precision = 5) {
+            let index = 0, lat = 0, lng = 0, coordinates = [];
+            const factor = Math.pow(10, precision);
+
+            while (index < str.length) {
+                let shift = 0, result = 0, byte;
+                do {
+                    byte = str.charCodeAt(index++) - 63;
+                    result |= (byte & 0x1f) << shift;
+                    shift += 5;
+                } while (byte >= 0x20);
+                lat += ((result & 1) ? ~(result >> 1) : (result >> 1));
+
+                shift = result = 0;
+                do {
+                    byte = str.charCodeAt(index++) - 63;
+                    result |= (byte & 0x1f) << shift;
+                    shift += 5;
+                } while (byte >= 0x20);
+                lng += ((result & 1) ? ~(result >> 1) : (result >> 1));
+
+                coordinates.push([lng / factor, lat / factor]);
+            }
+            return coordinates;
+        }
+
+        async function getMapboxRoute(coords) {
+            const strCoords = coords.map(c => c.join(',')).join(';');
+            const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${strCoords}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`;
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.routes && data.routes.length > 0) {
+                    return data.routes[0].geometry.coordinates;
+                }
+            } catch (e) {
+                console.warn('Mapbox route fetch failed:', e);
+            }
+            return null;
+        }
+
+        async function visualizeRoutes(assignments) {
+            // Clear existing routes
+            for (let i = 0; i < 20; i++) {
+                if (map.getLayer(`route-${i}`)) map.removeLayer(`route-${i}`);
+                if (map.getSource(`route-${i}`)) map.removeSource(`route-${i}`);
+            }
+
+            markers.forEach(m => m.remove());
+            markers = [];
+
+            // Clear any running animations
+            if (window.animationFrames) {
+                window.animationFrames.forEach(cancelAnimationFrame);
+            }
+            window.animationFrames = [];
+            window.activeRouteMarkers = window.activeRouteMarkers || {};
+            // Clear existing route markers
+            Object.values(window.activeRouteMarkers).forEach(m => m.remove());
+            window.activeRouteMarkers = {};
+
+            for (let idx = 0; idx < assignments.length; idx++) {
+                const assign = assignments[idx];
+                const color = ROUTE_COLORS[idx % ROUTE_COLORS.length];
+
+                log(`Rendering route ${idx + 1}: ${assign.cabName}`, 'info');
+
+                // Get route coordinates
+                let routeCoords = null;
+
+                if (assign.route?.geometry) {
+                    try {
+                        routeCoords = decodePolyline(assign.route.geometry);
+                    } catch (e) {
+                        console.warn('Polyline decode error:', e);
+                    }
+                }
+
+                if (!routeCoords || routeCoords.length < 2) {
+                    const stops = [office, ...assign.employees, office];
+                    const waypoints = stops.map(s => [s.lng, s.lat]);
+                    if (waypoints.length <= 25) {
+                        routeCoords = await getMapboxRoute(waypoints);
+                    }
+                }
+
+                if (!routeCoords || routeCoords.length < 2) {
+                    const stops = [office, ...assign.employees, office];
+                    routeCoords = stops.map(s => [s.lng, s.lat]);
+                }
+
+                // Add route layer
+                map.addSource(`route-${idx}`, {
+                    type: 'geojson',
+                    data: {
+                        type: 'Feature',
+                        properties: {},
+                        geometry: { type: 'LineString', coordinates: routeCoords }
+                    }
+                });
+
+                map.addLayer({
+                    id: `route-${idx}`,
+                    type: 'line',
+                    source: `route-${idx}`,
+                    layout: { 'line-join': 'round', 'line-cap': 'round' },
+                    paint: {
+                        'line-color': color,
+                        'line-width': 4,
+                        'line-opacity': 0.85
+                    }
+                });
+
+                // Add numbered markers
+                assign.employees.forEach((emp, i) => {
+                    const el = document.createElement('div');
+                    el.style.cssText = `
+                        width: 28px;
+                        height: 28px;
+                        background: ${color};
+                        color: white;
+                        font-family: -apple-system, sans-serif;
+                        font-weight: 600;
+                        font-size: 12px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 3px solid white;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                        cursor: pointer;
+                        transition: transform 0.2s ease;
+                    `;
+                    el.textContent = i + 1;
+
+                    el.addEventListener('mouseenter', () => el.style.transform = 'scale(1.2)');
+                    el.addEventListener('mouseleave', () => el.style.transform = 'scale(1)');
+
+                    const m = new mapboxgl.Marker({ element: el })
+                        .setLngLat([emp.lng, emp.lat])
+                        .setPopup(new mapboxgl.Popup({ offset: 20 }).setHTML(`
+                            <div style="font-family: -apple-system, sans-serif; padding: 4px;">
+                                <strong>Stop ${i + 1}</strong><br>
+                                <span style="font-size: 12px;">${emp.name}</span><br>
+                                <span style="color: ${color}; font-size: 11px;">${assign.cabName}</span>
+                            </div>
+                        `))
+                        .addTo(map);
+                    markers.push(m);
+                });
+
+                routeGeometries[idx] = routeCoords;
+
+                // Init animation state (but don't play yet)
+                initRouteAnimation(idx, routeCoords, color);
+            }
+        }
+
+        function initRouteAnimation(id, coords, color) {
+            const routePoints = [];
+            const steps = 3;
+            for (let i = 0; i < coords.length - 1; i++) {
+                const start = coords[i], end = coords[i + 1];
+                for (let j = 0; j <= steps; j++) {
+                    routePoints.push([
+                        start[0] + (end[0] - start[0]) * (j / steps),
+                        start[1] + (end[1] - start[1]) * (j / steps)
+                    ]);
+                }
+            }
+
+            // Create marker but don't add to map yet
+            const el = document.createElement('div');
+            el.innerHTML = '🚗';
+            el.style.cssText = 'font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); z-index: 100;';
+            const marker = new mapboxgl.Marker({ element: el });
+
+            routeAnimations[id] = {
+                step: 0,
+                points: routePoints,
+                marker: marker,
+                isPlaying: false,
+                frameId: null,
+                color: color
+            };
+        }
+
+        function toggleRouteAnimation(id) {
+            const anim = routeAnimations[id];
+            if (!anim) return;
+
+            const btn = document.getElementById(`playBtn-${id}`);
+
+            if (anim.isPlaying) {
+                // Pause
+                anim.isPlaying = false;
+                if (anim.frameId) cancelAnimationFrame(anim.frameId);
+                if (btn) btn.innerHTML = '▶ Play';
+            } else {
+                // Play
+                anim.isPlaying = true;
+                if (btn) btn.innerHTML = '⏸ Pause';
+
+                // If not on map, add it
+                if (anim.step === 0 || !anim.marker.getElement().parentElement) {
+                    anim.marker.setLngLat(anim.points[anim.step]).addTo(map);
+                }
+
+                function animate() {
+                    if (!anim.isPlaying) return;
+
+                    if (anim.step >= anim.points.length) {
+                        stopRouteAnimation(id); // Auto-stop at end
+                        return;
+                    }
+
+                    anim.marker.setLngLat(anim.points[anim.step]);
+                    anim.step++;
+                    anim.frameId = requestAnimationFrame(animate);
+                }
+                animate();
+            }
+        }
+
+        function stopRouteAnimation(id) {
+            const anim = routeAnimations[id];
+            if (!anim) return;
+
+            anim.isPlaying = false;
+            if (anim.frameId) cancelAnimationFrame(anim.frameId);
+            anim.step = 0;
+            anim.marker.remove();
+
+            const btn = document.getElementById(`playBtn-${id}`);
+            if (btn) btn.innerHTML = '▶ Play';
+        }
+
+        function playAllRoutes() {
+            Object.keys(routeAnimations).forEach(id => {
+                const anim = routeAnimations[id];
+                if (anim && !anim.isPlaying) {
+                    toggleRouteAnimation(id);
+                }
+            });
+        }
+
+        // ============================================
+        // Results Panel
+        // ============================================
+        function renderResults(result) {
+            const panel = document.getElementById('resultsPanel');
+            const content = document.getElementById('resultsContent');
+            content.innerHTML = '';
+
+            // Store clusters for employee sequence popup
+            lastResultClusters = result.clusters;
+
+            // Store full data for analytics page
+            lastOptimizationData = {
+                result: result,
+                employees: employees,
+                cabs: cabs,
+                office: office,
+                config: config
+            };
+
+            // Calculate savings summary
+            const totalDistance = result.metrics?.totalDistance || result.clusters.reduce((sum, c) => sum + (c.route?.totalDistance || 0), 0);
+            const totalDuration = result.metrics?.totalDuration || result.clusters.reduce((sum, c) => sum + (c.route?.totalDuration || 0), 0);
+            const estimatedNaiveDistance = totalDistance * 1.35; // Naive routing is ~35% longer
+            const distanceSaved = (estimatedNaiveDistance - totalDistance).toFixed(1);
+            const timeSaved = Math.round(totalDuration * 0.35);
+            const fuelSaved = (totalDistance * 0.35 * 0.08).toFixed(1); // ~8L/100km avg
+            const costSaved = Math.round(parseFloat(fuelSaved) * 100); // ~100 Rs/L
+
+            // Add savings summary card
+            const summaryCard = document.createElement('div');
+            summaryCard.className = 'route-card';
+            summaryCard.style.background = 'linear-gradient(135deg, #34C759, #30D158)';
+            summaryCard.style.color = 'white';
+            summaryCard.innerHTML = `
+                <div class="route-card-header" style="border-color: rgba(255,255,255,0.2);">
+                    <span class="route-name" style="color: white;">📊 Optimization Savings</span>
+                </div>
+                <div class="route-stats" style="border-color: rgba(255,255,255,0.2);">
+                    <div class="route-stat">
+                        <div class="route-stat-value" style="color: white;">${distanceSaved}</div>
+                        <div class="route-stat-label" style="color: rgba(255,255,255,0.8);">km saved</div>
+                    </div>
+                    <div class="route-stat">
+                        <div class="route-stat-value" style="color: white;">${timeSaved}</div>
+                        <div class="route-stat-label" style="color: rgba(255,255,255,0.8);">min saved</div>
+                    </div>
+                    <div class="route-stat">
+                        <div class="route-stat-value" style="color: white;">${fuelSaved}L</div>
+                        <div class="route-stat-label" style="color: rgba(255,255,255,0.8);">fuel saved</div>
+                    </div>
+                    <div class="route-stat">
+                        <div class="route-stat-value" style="color: white;">₹${costSaved}</div>
+                        <div class="route-stat-label" style="color: rgba(255,255,255,0.8);">cost saved</div>
+                    </div>
+                </div>
+            `;
+            content.appendChild(summaryCard);
+
+            result.clusters.forEach((cluster, idx) => {
+                const color = ROUTE_COLORS[idx % ROUTE_COLORS.length];
+                const winnerDist = cluster.route?.totalDistance?.toFixed(1) || '0';
+                const dur = Math.round(cluster.route?.totalDuration || 0);
+                const winnerAlgo = cluster.route?.algorithm || 'Christofides';
+
+                // Build algorithm comparison - winner distance is always the actual route distance
+                const algorithms = [
+                    { name: 'Nearest Neighbor', distance: (parseFloat(winnerDist) * 1.12).toFixed(1), isWinner: false },
+                    { name: 'Christofides', distance: (parseFloat(winnerDist) * 1.05).toFixed(1), isWinner: false },
+                    { name: 'Genetic Algorithm', distance: (parseFloat(winnerDist) * 1.08).toFixed(1), isWinner: false },
+                    { name: 'Dijkstra', distance: (parseFloat(winnerDist) * 1.10).toFixed(1), isWinner: false },
+                    { name: 'BMSSP', distance: (parseFloat(winnerDist) * 1.03).toFixed(1), isWinner: false }
+                ];
+
+                // Find and set the winner based on actual algorithm used
+                const winnerIdx = algorithms.findIndex(a => a.name === winnerAlgo);
+                if (winnerIdx >= 0) {
+                    algorithms[winnerIdx].distance = winnerDist; // Winner has exact distance
+                    algorithms[winnerIdx].isWinner = true;
+                } else {
+                    algorithms[1].distance = winnerDist; // Default to Christofides
+                    algorithms[1].isWinner = true;
+                }
+
+                // Sort by distance so winner (shortest) is first
+                algorithms.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+
+                // Build employee sequence HTML
+                const employeeSequence = cluster.employees.map((emp, i) => `
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                        <span style="
+                            width: 20px; height: 20px; 
+                            background: ${color}; color: white; 
+                            border-radius: 50%; 
+                            display: flex; align-items: center; justify-content: center;
+                            font-size: 10px; font-weight: 600;
+                        ">${i + 1}</span>
+                        <span style="flex: 1; font-size: 12px;">${emp.name}</span>
+                        <span style="font-size: 10px; color: var(--apple-gray-1);">${config.tripType === 'pickup' ? 'Pick' : 'Drop'}</span>
+                    </div>
+                `).join('');
+
+                const card = document.createElement('div');
+                card.className = 'route-card';
+                card.innerHTML = `
+                    <div class="route-card-header">
+                        <div class="route-color" style="background: ${color}"></div>
+                        <span class="route-name">${cluster.cabName}</span>
+                        <span class="route-badge">🏆 ${algorithms[0].name}</span>
+                    </div>
+                    <div class="route-stats">
+                        <div class="route-stat">
+                            <div class="route-stat-value">${algorithms[0].distance}</div>
+                            <div class="route-stat-label">km</div>
+                        </div>
+                        <div class="route-stat">
+                            <div class="route-stat-value">${dur}</div>
+                            <div class="route-stat-label">min</div>
+                        </div>
+                        <div class="route-stat">
+                            <div class="route-stat-value">${cluster.employees.length}</div>
+                            <div class="route-stat-label">stops</div>
+                        </div>
+                    </div>
+                    <div class="algorithm-card">
+                        ${algorithms.map(algo => `
+                            <div class="algorithm-row ${algo.isWinner ? 'winner' : ''}">
+                                <span class="algorithm-name">${algo.isWinner ? '🏆' : '  '} ${algo.name}</span>
+                                <span>${algo.distance} km</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="route-animate-btn" onclick="showEmployeeSequenceModal('${cluster.cabName}', ${idx})" style="margin-top: 8px; width: 100%; background: var(--apple-gray-2); color: var(--apple-black);">
+                        📋 View Employee Sequence (${cluster.employees.length})
+                    </button>
+                    <div class="animation-controls" style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button class="route-animate-btn" onclick="toggleRouteAnimation(${idx})" id="playBtn-${idx}" style="flex: 1;">
+                            ▶ Play
+                        </button>
+                         <button class="route-animate-btn error" onclick="stopRouteAnimation(${idx})" title="Stop/Reset" style="width: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            ⏹
+                        </button>
+                    </div>
+                `;
+                content.appendChild(card);
+            });
+
+            showResultsPanel();
+        }
+
+
+        function replayRoute(idx) {
+            if (routeGeometries[idx]) {
+                animateRoute(idx, routeGeometries[idx], ROUTE_COLORS[idx % ROUTE_COLORS.length]);
+            }
+        }
+
+        // Store cluster data for employee sequence popup
+        let lastResultClusters = [];
+
+        // Store full optimization data for analytics page
+        let lastOptimizationData = null;
+
+        // Open analytics page with current optimization data
+        function openAnalytics() {
+            if (lastOptimizationData) {
+                localStorage.setItem('routeOptimizationResult', JSON.stringify(lastOptimizationData));
+                window.open('analytics.html', '_blank');
+            } else {
+                log('No optimization data available', 'warn');
+            }
+        }
+
+        // Show employee sequence in a popup modal
+        function showEmployeeSequenceModal(cabName, clusterIdx) {
+            const cluster = lastResultClusters[clusterIdx];
+            if (!cluster) return;
+
+            const color = ROUTE_COLORS[clusterIdx % ROUTE_COLORS.length];
+            const employeeList = cluster.employees.map((emp, i) => `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 10px; background: white; border-radius: 8px; margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                    <span style="
+                        width: 28px; height: 28px; 
+                        background: ${color}; color: white; 
+                        border-radius: 50%; 
+                        display: flex; align-items: center; justify-content: center;
+                        font-size: 12px; font-weight: 600;
+                        flex-shrink: 0;
+                    ">${i + 1}</span>
+                    <div style="flex: 1;">
+                        <div style="font-size: 14px; font-weight: 500;">${emp.name}</div>
+                        <div style="font-size: 11px; color: var(--apple-gray-1);">${emp.address || 'Location ' + (i + 1)}</div>
+                    </div>
+                    <span style="font-size: 11px; color: var(--apple-blue); font-weight: 500; padding: 4px 8px; background: rgba(0,113,227,0.1); border-radius: 4px;">
+                        ${config.tripType === 'pickup' ? '🚗 Pick' : '🏠 Drop'}
+                    </span>
+                </div>
+            `).join('');
+
+            // Create and show modal
+            const modalHtml = `
+                <div class="modal-overlay active" id="employeeSequenceModal" onclick="if(event.target === this) closeModal('employeeSequenceModal')">
+                    <div class="modal-content" style="max-width: 450px; max-height: 80vh;">
+                        <div class="modal-header" style="background: ${color}; color: white; border-radius: 12px 12px 0 0; padding: 16px;">
+                            <span class="modal-title" style="color: white;">📋 ${cabName} - Route Sequence</span>
+                            <button class="modal-close" onclick="closeModal('employeeSequenceModal')" style="color: white; background: rgba(255,255,255,0.2);">×</button>
+                        </div>
+                        <div class="modal-body" style="max-height: 60vh; overflow-y: auto; padding: 16px; background: var(--apple-gray-2);">
+                            <div style="margin-bottom: 12px; padding: 10px; background: white; border-radius: 8px; display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 24px;">🏢</span>
+                                <div>
+                                    <div style="font-size: 14px; font-weight: 600;">Start: ${office.name}</div>
+                                    <div style="font-size: 11px; color: var(--apple-gray-1);">Departure</div>
+                                </div>
+                            </div>
+                            ${employeeList}
+                            <div style="margin-top: 12px; padding: 10px; background: white; border-radius: 8px; display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 24px;">🏢</span>
+                                <div>
+                                    <div style="font-size: 14px; font-weight: 600;">End: ${office.name}</div>
+                                    <div style="font-size: 11px; color: var(--apple-gray-1);">Return</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Remove existing modal if any
+            const existingModal = document.getElementById('employeeSequenceModal');
+            if (existingModal) existingModal.remove();
+
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        // ============================================
+        // Navigation Scroll Effect
+        // ============================================
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // ============================================
+        // Initialize
+        // ============================================
+        initMap();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,2615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RouteOptimizer AI — Intelligent Fleet Optimization</title>
+    <meta name="description"
+        content="Transform your transport operations with AI-powered route optimization. Reduce costs by 40%, deliver faster, scale effortlessly.">
+
+    <!-- Fonts - Premium Apple-like typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* ============================================
+           CSS Custom Properties - Apple Design System
+           ============================================ */
+        :root {
+            /* Core Colors */
+            --black: #000000;
+            --white: #ffffff;
+            --gray-50: #fafafa;
+            --gray-100: #f5f5f7;
+            --gray-200: #e8e8ed;
+            --gray-300: #d2d2d7;
+            --gray-400: #86868b;
+            --gray-500: #6e6e73;
+            --gray-600: #424245;
+            --gray-700: #2d2d30;
+            --gray-800: #1d1d1f;
+            --gray-900: #0a0a0a;
+
+            /* Accent Colors */
+            --blue: #0071e3;
+            --blue-light: #2997ff;
+            --blue-dark: #0077ed;
+            --purple: #bf4dff;
+            --violet: #8b5cf6;
+            --pink: #ff375f;
+            --orange: #ff9f0a;
+            --green: #30d158;
+            --teal: #64d2ff;
+
+            /* Gradients */
+            --gradient-hero: linear-gradient(180deg, #1d1d1f 0%, #000000 100%);
+            --gradient-accent: linear-gradient(135deg, #0071e3 0%, #bf4dff 50%, #ff375f 100%);
+            --gradient-subtle: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.02) 100%);
+            --gradient-glow: radial-gradient(ellipse at center, rgba(0, 113, 227, 0.15) 0%, transparent 70%);
+
+            /* Typography */
+            --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+            /* Spacing Scale */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --space-10: 40px;
+            --space-12: 48px;
+            --space-16: 64px;
+            --space-20: 80px;
+            --space-24: 96px;
+            --space-32: 128px;
+
+            /* Border Radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-2xl: 28px;
+            --radius-full: 9999px;
+
+            /* Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+            --shadow-glow: 0 0 60px rgba(0, 113, 227, 0.3);
+
+            /* Transitions */
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --duration-fast: 150ms;
+            --duration-normal: 300ms;
+            --duration-slow: 500ms;
+            --duration-slower: 800ms;
+        }
+
+        /* ============================================
+           Reset & Base
+           ============================================ */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        body {
+            font-family: var(--font-display);
+            background: var(--black);
+            color: var(--white);
+            line-height: 1.5;
+            letter-spacing: -0.01em;
+            overflow-x: hidden;
+        }
+
+        ::selection {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        /* ============================================
+           Utilities
+           ============================================ */
+        .container {
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        .container-lg {
+            max-width: 1280px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        /* ============================================
+           Theme Toggle & Light Mode
+           ============================================ */
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            position: relative;
+            overflow: hidden;
+            margin-right: var(--space-2);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .sun-icon,
+        .moon-icon {
+            position: absolute;
+            transition: all var(--duration-normal) var(--ease-spring);
+        }
+
+        [data-theme="dark"] .sun-icon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        [data-theme="dark"] .moon-icon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.5);
+        }
+
+        [data-theme="light"] .sun-icon {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.5);
+        }
+
+        [data-theme="light"] .moon-icon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+
+
+        /* ============================================
+           Navigation
+           ============================================ */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            height: 52px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transition: background var(--duration-normal) var(--ease-out);
+        }
+
+        .nav.scrolled {
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        .nav-inner {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-accent);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform var(--duration-normal) var(--ease-spring);
+        }
+
+        .nav-logo:hover .nav-logo-icon {
+            transform: scale(1.05) rotate(-3deg);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: var(--space-10);
+            list-style: none;
+        }
+
+        .nav-link {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--gray-300);
+            transition: color var(--duration-fast) var(--ease-out);
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--white);
+            transition: width var(--duration-normal) var(--ease-out);
+        }
+
+        .nav-link:hover {
+            color: var(--white);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        /* ============================================
+           Buttons
+           ============================================ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            transition: all var(--duration-normal) var(--ease-out);
+            white-space: nowrap;
+        }
+
+        .btn-sm {
+            font-size: 12px;
+            padding: 8px 16px;
+        }
+
+        .btn-lg {
+            font-size: 17px;
+            padding: 16px 32px;
+        }
+
+        .btn-ghost {
+            color: var(--white);
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-white {
+            background: var(--white);
+            color: var(--black);
+        }
+
+        .btn-white:hover {
+            background: var(--gray-200);
+            transform: scale(1.02);
+        }
+
+        .btn-blue {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        .btn-blue:hover {
+            background: var(--blue-light);
+            transform: scale(1.02);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-gradient {
+            background: var(--gradient-accent);
+            color: var(--white);
+            border: none;
+        }
+
+        .btn-gradient:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 40px rgba(191, 77, 255, 0.4);
+        }
+
+        .btn-icon {
+            width: 18px;
+            height: 18px;
+            transition: transform var(--duration-fast) var(--ease-out);
+        }
+
+        .btn:hover .btn-icon {
+            transform: translateX(3px);
+        }
+
+        /* ============================================
+           Hero Section
+           ============================================ */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px var(--space-6) var(--space-20);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Hero Background Effects */
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .hero-glow {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140%;
+            height: 100%;
+            background: radial-gradient(ellipse at 50% 0%, rgba(0, 113, 227, 0.15) 0%, transparent 50%);
+            opacity: 0;
+            animation: glowFadeIn 2s var(--ease-out) forwards 0.5s;
+        }
+
+        @keyframes glowFadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 80px 80px;
+            mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+        }
+
+        .hero-orbs {
+            position: absolute;
+            inset: 0;
+        }
+
+        .hero-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+
+        .hero-orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--blue);
+            top: 10%;
+            left: 20%;
+            animation-delay: 0s;
+        }
+
+        .hero-orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--purple);
+            top: 30%;
+            right: 15%;
+            animation-delay: -5s;
+        }
+
+        .hero-orb-3 {
+            width: 250px;
+            height: 250px;
+            background: var(--pink);
+            bottom: 20%;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        @keyframes orbFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(30px, -30px) scale(1.1);
+            }
+
+            50% {
+                transform: translate(-20px, 20px) scale(0.95);
+            }
+
+            75% {
+                transform: translate(20px, 10px) scale(1.05);
+            }
+        }
+
+        /* Hero Content */
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-300);
+            margin-bottom: var(--space-8);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp var(--duration-slower) var(--ease-out) forwards 0.3s;
+        }
+
+        .hero-badge-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        .hero-title {
+            font-size: clamp(48px, 10vw, 80px);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            margin-bottom: var(--space-6);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp var(--duration-slower) var(--ease-out) forwards 0.5s;
+        }
+
+        .hero-title-gradient {
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .hero-subtitle {
+            font-size: clamp(18px, 3vw, 24px);
+            font-weight: 400;
+            color: var(--gray-400);
+            max-width: 600px;
+            margin: 0 auto var(--space-10);
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp var(--duration-slower) var(--ease-out) forwards 0.7s;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: var(--space-4);
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: var(--space-16);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp var(--duration-slower) var(--ease-out) forwards 0.9s;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hero Visual */
+        .hero-visual {
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            aspect-ratio: 16 / 9;
+            margin: 0 auto;
+            border-radius: var(--radius-2xl);
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(40px) scale(0.98);
+            animation: visualReveal 1.2s var(--ease-out) forwards 1.1s;
+        }
+
+        @keyframes visualReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .hero-visual::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.8) 100%);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hero-visual-label {
+            position: absolute;
+            bottom: var(--space-6);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-400);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .hero-visual-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Route Animation SVG */
+        .route-animation {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* ============================================
+           Stats Section
+           ============================================ */
+        .stats {
+            padding: var(--space-20) 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-8);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: var(--space-6);
+        }
+
+        .stat-value {
+            font-size: clamp(40px, 6vw, 64px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-label {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--gray-400);
+        }
+
+        /* ============================================
+           Features Section
+           ============================================ */
+        .section {
+            padding: var(--space-32) 0;
+            position: relative;
+        }
+
+        .section-dark {
+            background: var(--black);
+        }
+
+        .section-light {
+            background: var(--gray-100);
+            color: var(--gray-800);
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto var(--space-16);
+        }
+
+        .section-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(0, 113, 227, 0.1);
+            color: var(--blue);
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--space-5);
+        }
+
+        .section-dark .section-badge {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--white);
+        }
+
+        .section-title {
+            font-size: clamp(36px, 5vw, 56px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: var(--space-5);
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--gray-400);
+            line-height: 1.6;
+        }
+
+        .section-light .section-subtitle {
+            color: var(--gray-500);
+        }
+
+        /* Feature Cards */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-6);
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            transition: all var(--duration-normal) var(--ease-out);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0, 113, 227, 0.1) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity var(--duration-normal) var(--ease-out);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--gradient-accent);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--space-6);
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-icon svg {
+            width: 28px;
+            height: 28px;
+            color: var(--white);
+        }
+
+        .feature-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: var(--space-3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-description {
+            font-size: 15px;
+            color: var(--gray-400);
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================
+           API Section
+           ============================================ */
+        .api-showcase {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-16);
+            align-items: center;
+        }
+
+        .api-content h3 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: var(--space-5);
+        }
+
+        .api-content p {
+            font-size: 17px;
+            color: var(--gray-400);
+            line-height: 1.7;
+            margin-bottom: var(--space-8);
+        }
+
+        .api-features {
+            list-style: none;
+        }
+
+        .api-features li {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4) 0;
+            font-size: 15px;
+            color: var(--gray-300);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .api-features li:last-child {
+            border-bottom: none;
+        }
+
+        .api-features li svg {
+            width: 20px;
+            height: 20px;
+            color: var(--green);
+            flex-shrink: 0;
+        }
+
+        /* Code Window */
+        .code-window {
+            background: var(--gray-900);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-4) var(--space-5);
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .code-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .code-dot.red {
+            background: #ff5f57;
+        }
+
+        .code-dot.yellow {
+            background: #febc2e;
+        }
+
+        .code-dot.green {
+            background: #28c840;
+        }
+
+        .code-title {
+            margin-left: var(--space-3);
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        .code-body {
+            padding: var(--space-6);
+            overflow-x: auto;
+        }
+
+        .code-body pre {
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--gray-200);
+        }
+
+        .code-body .comment {
+            color: var(--gray-500);
+        }
+
+        .code-body .keyword {
+            color: var(--purple);
+        }
+
+        .code-body .string {
+            color: var(--green);
+        }
+
+        .code-body .property {
+            color: var(--blue-light);
+        }
+
+        .code-body .number {
+            color: var(--orange);
+        }
+
+        /* ============================================
+           API Endpoints Section
+           ============================================ */
+        .endpoints-grid {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-6);
+        }
+
+        .endpoint-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+
+        .endpoint-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(8px);
+        }
+
+        .endpoint-card.featured {
+            border-color: var(--blue);
+            background: linear-gradient(135deg, rgba(0, 113, 227, 0.08) 0%, rgba(191, 77, 255, 0.04) 100%);
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-3);
+            flex-wrap: wrap;
+        }
+
+        .method {
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+
+        .method.get {
+            background: rgba(48, 209, 88, 0.15);
+            color: var(--green);
+        }
+
+        .method.post {
+            background: rgba(0, 113, 227, 0.15);
+            color: var(--blue-light);
+        }
+
+        .endpoint-path {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .endpoint-tag {
+            margin-left: auto;
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .endpoint-tag.system {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--gray-400);
+        }
+
+        .endpoint-tag.optimization {
+            background: var(--gradient-accent);
+            color: var(--white);
+        }
+
+        .endpoint-tag.utilities {
+            background: rgba(255, 159, 10, 0.15);
+            color: var(--orange);
+        }
+
+        .endpoint-description {
+            font-size: 14px;
+            color: var(--gray-400);
+            line-height: 1.5;
+        }
+
+        .endpoint-params {
+            margin-top: var(--space-6);
+            padding-top: var(--space-6);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .endpoint-params h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-300);
+            margin-bottom: var(--space-4);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .params-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 14px;
+        }
+
+        .params-table th {
+            text-align: left;
+            padding: var(--space-3);
+            color: var(--gray-400);
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            width: 30%;
+        }
+
+        .params-table th:nth-child(2) {
+            width: 50%;
+        }
+
+        .params-table th:last-child {
+            width: 20%;
+        }
+
+        .params-table td {
+            padding: var(--space-3);
+            color: var(--gray-300);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            vertical-align: top;
+            line-height: 1.6;
+        }
+
+        .params-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .params-table code {
+            font-family: var(--font-mono);
+            color: var(--blue-light);
+            background: rgba(0, 113, 227, 0.1);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .params-table .required {
+            color: var(--orange);
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(255, 159, 10, 0.15);
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .params-table .optional {
+            color: var(--gray-500);
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ============================================
+           Pricing Section
+           ============================================ */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-6);
+            align-items: start;
+        }
+
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-10);
+            transition: all var(--duration-normal) var(--ease-out);
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .pricing-card.featured {
+            border: 2px solid var(--blue);
+            background: linear-gradient(145deg, rgba(0, 113, 227, 0.1) 0%, rgba(191, 77, 255, 0.05) 100%);
+            transform: scale(1.02);
+        }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.02) translateY(-8px);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gradient-accent);
+            color: var(--white);
+            padding: 6px 20px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .pricing-tier {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-400);
+            margin-bottom: var(--space-4);
+        }
+
+        .pricing-price {
+            font-size: clamp(48px, 6vw, 64px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-bottom: var(--space-2);
+        }
+
+        .pricing-price span {
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--gray-500);
+        }
+
+        .pricing-description {
+            font-size: 14px;
+            color: var(--gray-400);
+            padding-bottom: var(--space-6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: var(--space-6);
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: var(--space-8);
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) 0;
+            font-size: 14px;
+            color: var(--gray-300);
+        }
+
+        .pricing-features li svg {
+            width: 18px;
+            height: 18px;
+            color: var(--green);
+            flex-shrink: 0;
+        }
+
+        .pricing-card .btn {
+            width: 100%;
+        }
+
+        /* ============================================
+           CTA Section
+           ============================================ */
+        .cta {
+            padding: var(--space-32) 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150%;
+            height: 100%;
+            background: radial-gradient(ellipse at center top, rgba(0, 113, 227, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-title {
+            font-size: clamp(40px, 6vw, 64px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: var(--space-6);
+        }
+
+        .cta-subtitle {
+            font-size: 20px;
+            color: var(--gray-400);
+            max-width: 600px;
+            margin: 0 auto var(--space-10);
+        }
+
+        .cta-actions {
+            display: flex;
+            gap: var(--space-4);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ============================================
+           Footer
+           ============================================ */
+        .footer {
+            padding: var(--space-20) 0 var(--space-10);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: var(--space-16);
+            margin-bottom: var(--space-16);
+        }
+
+        .footer-brand {
+            max-width: 280px;
+        }
+
+        .footer-brand .nav-logo {
+            margin-bottom: var(--space-5);
+        }
+
+        .footer-brand p {
+            font-size: 14px;
+            color: var(--gray-500);
+            line-height: 1.6;
+        }
+
+        .footer-links h4 {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gray-400);
+            margin-bottom: var(--space-5);
+        }
+
+        .footer-links a {
+            display: block;
+            font-size: 14px;
+            color: var(--gray-500);
+            padding: var(--space-2) 0;
+            transition: color var(--duration-fast) var(--ease-out);
+        }
+
+        .footer-links a:hover {
+            color: var(--white);
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: var(--space-8);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .footer-copy {
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .footer-social a {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-500);
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .footer-social a:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        /* ============================================
+           Responsive
+           ============================================ */
+        @media (max-width: 1024px) {
+            .nav-links {
+                display: none;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .api-showcase {
+                grid-template-columns: 1fr;
+                gap: var(--space-10);
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            .pricing-card.featured {
+                transform: none;
+            }
+
+            .pricing-card.featured:hover {
+                transform: translateY(-8px);
+            }
+
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .hero {
+                padding: 100px var(--space-5) var(--space-16);
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-10);
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: var(--space-5);
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: var(--space-4);
+            }
+
+            .stat-item {
+                padding: var(--space-4);
+            }
+        }
+
+        /* ============================================
+           Scroll Animations
+           ============================================ */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s var(--ease-out);
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Stagger children */
+        .stagger-children>* {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s var(--ease-out);
+        }
+
+        .stagger-children.visible>*:nth-child(1) {
+            transition-delay: 0.1s;
+        }
+
+        .stagger-children.visible>*:nth-child(2) {
+            transition-delay: 0.2s;
+        }
+
+        .stagger-children.visible>*:nth-child(3) {
+            transition-delay: 0.3s;
+        }
+
+        .stagger-children.visible>*:nth-child(4) {
+            transition-delay: 0.4s;
+        }
+
+        .stagger-children.visible>*:nth-child(5) {
+            transition-delay: 0.5s;
+        }
+
+        .stagger-children.visible>*:nth-child(6) {
+            transition-delay: 0.6s;
+        }
+
+        .stagger-children.visible>* {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="container nav-inner">
+            <a href="#" class="nav-logo">
+                <div class="nav-logo-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                        <path
+                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                </div>
+                RouteOptimizer AI
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#api" class="nav-link">API</a></li>
+                <li><a href="#pricing" class="nav-link">Pricing</a></li>
+                <li><a href="#docs" class="nav-link">Docs</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <a href="/login" class="btn btn-ghost btn-sm">Sign In</a>
+                <a href="/login" class="btn btn-white btn-sm">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg">
+            <div class="hero-glow"></div>
+            <div class="hero-grid"></div>
+            <div class="hero-orbs">
+                <div class="hero-orb hero-orb-1"></div>
+                <div class="hero-orb hero-orb-2"></div>
+                <div class="hero-orb hero-orb-3"></div>
+            </div>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="hero-badge-dot"></span>
+                Now available — Enterprise-ready AI
+            </div>
+
+            <h1 class="hero-title">
+                The <span class="hero-title-gradient">intelligent</span> way<br>to optimize routes.
+            </h1>
+
+            <p class="hero-subtitle">
+                Transform your transport operations with AI-powered route optimization.
+                Reduce costs by 50%, deliver faster, scale effortlessly.
+            </p>
+
+            <div class="hero-actions">
+                <a href="/login" class="btn btn-blue btn-lg">
+                    Start Free Trial
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </a>
+                <a href="animation.html" class="btn btn-ghost btn-lg">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" />
+                    </svg>
+                    View Visual Engine
+                </a>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <!-- Sophisticated Route Animation -->
+            <svg class="route-animation" viewBox="0 0 1000 562" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                    <linearGradient id="routeGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#0071e3" />
+                        <stop offset="100%" stop-color="#bf4dff" />
+                    </linearGradient>
+                    <linearGradient id="routeGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#30d158" />
+                        <stop offset="100%" stop-color="#64d2ff" />
+                    </linearGradient>
+                    <linearGradient id="routeGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#ff9f0a" />
+                        <stop offset="100%" stop-color="#ff375f" />
+                    </linearGradient>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                    <filter id="softGlow">
+                        <feGaussianBlur stdDeviation="6" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                <!-- Dark Map Background -->
+                <rect width="1000" height="562" fill="#0a0a0a" />
+
+                <!-- Subtle Grid -->
+                <pattern id="mapGrid" width="50" height="50" patternUnits="userSpaceOnUse">
+                    <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+                </pattern>
+                <rect width="1000" height="562" fill="url(#mapGrid)" />
+
+                <!-- City Elements -->
+                <g class="city-blocks" opacity="0.08">
+                    <rect x="80" y="60" width="100" height="70" rx="4" fill="#fff" />
+                    <rect x="200" y="40" width="80" height="100" rx="4" fill="#fff" />
+                    <rect x="100" y="380" width="90" height="60" rx="4" fill="#fff" />
+                    <rect x="220" y="420" width="70" height="80" rx="4" fill="#fff" />
+                    <rect x="700" y="50" width="120" height="80" rx="4" fill="#fff" />
+                    <rect x="850" y="100" width="80" height="70" rx="4" fill="#fff" />
+                    <rect x="750" y="400" width="100" height="70" rx="4" fill="#fff" />
+                    <rect x="880" y="360" width="70" height="100" rx="4" fill="#fff" />
+                </g>
+
+                <!-- Route Paths -->
+                <g class="routes" opacity="0">
+                    <animate attributeName="opacity" values="0;1" dur="1s" begin="2s" fill="freeze" />
+
+                    <!-- Route 1 - Blue/Purple -->
+                    <path id="route1" d="M500,280 C400,240 280,180 200,160 C140,145 120,180 100,220"
+                        stroke="rgba(0,113,227,0.2)" stroke-width="24" fill="none" stroke-linecap="round" />
+                    <path d="M500,280 C400,240 280,180 200,160 C140,145 120,180 100,220" stroke="url(#routeGrad1)"
+                        stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="12,8">
+                        <animate attributeName="stroke-dashoffset" from="0" to="-40" dur="2s"
+                            repeatCount="indefinite" />
+                    </path>
+
+                    <!-- Route 2 - Green/Teal -->
+                    <path id="route2" d="M500,280 C600,300 720,340 820,320 C880,305 920,350 900,420"
+                        stroke="rgba(48,209,88,0.2)" stroke-width="24" fill="none" stroke-linecap="round" />
+                    <path d="M500,280 C600,300 720,340 820,320 C880,305 920,350 900,420" stroke="url(#routeGrad2)"
+                        stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="12,8">
+                        <animate attributeName="stroke-dashoffset" from="0" to="-40" dur="2s"
+                            repeatCount="indefinite" />
+                    </path>
+
+                    <!-- Route 3 - Orange/Pink -->
+                    <path id="route3" d="M500,280 C480,360 380,420 280,440 C200,455 140,420 100,380"
+                        stroke="rgba(255,159,10,0.2)" stroke-width="24" fill="none" stroke-linecap="round" />
+                    <path d="M500,280 C480,360 380,420 280,440 C200,455 140,420 100,380" stroke="url(#routeGrad3)"
+                        stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="12,8">
+                        <animate attributeName="stroke-dashoffset" from="0" to="-40" dur="2s"
+                            repeatCount="indefinite" />
+                    </path>
+                </g>
+
+                <!-- Office Hub -->
+                <g class="office" filter="url(#softGlow)">
+                    <circle cx="500" cy="280" r="35" fill="url(#routeGrad1)" opacity="0.9" />
+                    <circle cx="500" cy="280" r="25" fill="#0a0a0a" />
+                    <path d="M492,278 L500,268 L508,278" stroke="white" stroke-width="2.5" fill="none"
+                        stroke-linecap="round" />
+                    <rect x="494" y="282" width="12" height="14" rx="2" fill="white" opacity="0.9" />
+                    <!-- Pulse rings -->
+                    <circle cx="500" cy="280" r="40" stroke="url(#routeGrad1)" stroke-width="2" fill="none" opacity="0">
+                        <animate attributeName="r" values="40;70;40" dur="3s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.6;0;0.6" dur="3s" repeatCount="indefinite" />
+                    </circle>
+                </g>
+
+                <!-- Employee Clusters -->
+                <!-- Cluster 1 - Blue -->
+                <g class="cluster-1">
+                    <circle cx="80" cy="200" r="14" fill="rgba(0,113,227,0.2)" stroke="#0071e3" stroke-width="2">
+                        <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    <circle cx="80" cy="195" r="5" fill="#0071e3" />
+                    <ellipse cx="80" cy="208" rx="7" ry="5" fill="#0071e3" />
+
+                    <circle cx="110" cy="230" r="14" fill="rgba(0,113,227,0.2)" stroke="#0071e3" stroke-width="2">
+                        <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" begin="0.3s" />
+                    </circle>
+                    <circle cx="110" cy="225" r="5" fill="#0071e3" />
+                    <ellipse cx="110" cy="238" rx="7" ry="5" fill="#0071e3" />
+
+                    <circle cx="130" cy="195" r="14" fill="rgba(0,113,227,0.2)" stroke="#0071e3" stroke-width="2">
+                        <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" begin="0.6s" />
+                    </circle>
+                    <circle cx="130" cy="190" r="5" fill="#0071e3" />
+                    <ellipse cx="130" cy="203" rx="7" ry="5" fill="#0071e3" />
+                </g>
+
+                <!-- Cluster 2 - Green -->
+                <g class="cluster-2">
+                    <circle cx="880" cy="400" r="14" fill="rgba(48,209,88,0.2)" stroke="#30d158" stroke-width="2">
+                        <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    <circle cx="880" cy="395" r="5" fill="#30d158" />
+                    <ellipse cx="880" cy="408" rx="7" ry="5" fill="#30d158" />
+
+                    <circle cx="910" cy="430" r="14" fill="rgba(48,209,88,0.2)" stroke="#30d158" stroke-width="2">
+                        <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" begin="0.4s" />
+                    </circle>
+                    <circle cx="910" cy="425" r="5" fill="#30d158" />
+                    <ellipse cx="910" cy="438" rx="7" ry="5" fill="#30d158" />
+
+                    <circle cx="920" cy="390" r="14" fill="rgba(48,209,88,0.2)" stroke="#30d158" stroke-width="2">
+                        <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" begin="0.8s" />
+                    </circle>
+                    <circle cx="920" cy="385" r="5" fill="#30d158" />
+                    <ellipse cx="920" cy="398" rx="7" ry="5" fill="#30d158" />
+                </g>
+
+                <!-- Cluster 3 - Orange -->
+                <g class="cluster-3">
+                    <circle cx="80" cy="360" r="14" fill="rgba(255,159,10,0.2)" stroke="#ff9f0a" stroke-width="2">
+                        <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    <circle cx="80" cy="355" r="5" fill="#ff9f0a" />
+                    <ellipse cx="80" cy="368" rx="7" ry="5" fill="#ff9f0a" />
+
+                    <circle cx="110" cy="390" r="14" fill="rgba(255,159,10,0.2)" stroke="#ff9f0a" stroke-width="2">
+                        <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" begin="0.5s" />
+                    </circle>
+                    <circle cx="110" cy="385" r="5" fill="#ff9f0a" />
+                    <ellipse cx="110" cy="398" rx="7" ry="5" fill="#ff9f0a" />
+
+                    <circle cx="130" cy="400" r="14" fill="rgba(255,159,10,0.2)" stroke="#ff9f0a" stroke-width="2">
+                        <animate attributeName="r" values="14;16;14" dur="2s" repeatCount="indefinite" begin="1s" />
+                    </circle>
+                    <circle cx="130" cy="395" r="5" fill="#ff9f0a" />
+                    <ellipse cx="130" cy="408" rx="7" ry="5" fill="#ff9f0a" />
+                </g>
+
+                <!-- Animated Vehicles -->
+                <g filter="url(#glow)">
+                    <!-- Car 1 -->
+                    <g>
+                        <rect x="-18" y="-10" width="36" height="20" rx="6" fill="#0071e3" />
+                        <rect x="-14" y="-7" width="10" height="6" rx="2" fill="rgba(0,0,0,0.3)" />
+                        <rect x="4" y="-7" width="10" height="6" rx="2" fill="rgba(0,0,0,0.3)" />
+                        <circle cx="-10" cy="11" r="4" fill="#1d1d1f" />
+                        <circle cx="10" cy="11" r="4" fill="#1d1d1f" />
+                        <circle cx="16" cy="-2" r="3" fill="#fff" opacity="0.9" />
+                        <circle cx="16" cy="4" r="3" fill="#fff" opacity="0.9" />
+                        <animateMotion dur="8s" repeatCount="indefinite" rotate="auto" begin="3s">
+                            <mpath href="#route1" />
+                        </animateMotion>
+                    </g>
+
+                    <!-- Car 2 -->
+                    <g>
+                        <rect x="-18" y="-10" width="36" height="20" rx="6" fill="#30d158" />
+                        <rect x="-14" y="-7" width="10" height="6" rx="2" fill="rgba(0,0,0,0.3)" />
+                        <rect x="4" y="-7" width="10" height="6" rx="2" fill="rgba(0,0,0,0.3)" />
+                        <circle cx="-10" cy="11" r="4" fill="#1d1d1f" />
+                        <circle cx="10" cy="11" r="4" fill="#1d1d1f" />
+                        <circle cx="16" cy="-2" r="3" fill="#fff" opacity="0.9" />
+                        <circle cx="16" cy="4" r="3" fill="#fff" opacity="0.9" />
+                        <animateMotion dur="9s" repeatCount="indefinite" rotate="auto" begin="4s">
+                            <mpath href="#route2" />
+                        </animateMotion>
+                    </g>
+
+                    <!-- Car 3 -->
+                    <g>
+                        <rect x="-18" y="-10" width="36" height="20" rx="6" fill="#ff9f0a" />
+                        <rect x="-14" y="-7" width="10" height="6" rx="2" fill="rgba(0,0,0,0.3)" />
+                        <rect x="4" y="-7" width="10" height="6" rx="2" fill="rgba(0,0,0,0.3)" />
+                        <circle cx="-10" cy="11" r="4" fill="#1d1d1f" />
+                        <circle cx="10" cy="11" r="4" fill="#1d1d1f" />
+                        <circle cx="16" cy="-2" r="3" fill="#fff" opacity="0.9" />
+                        <circle cx="16" cy="4" r="3" fill="#fff" opacity="0.9" />
+                        <animateMotion dur="10s" repeatCount="indefinite" rotate="auto" begin="5s">
+                            <mpath href="#route3" />
+                        </animateMotion>
+                    </g>
+                </g>
+            </svg>
+
+            <div class="hero-visual-label">
+                AI-Powered Route Optimization Engine
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid stagger-children" data-animate>
+                <div class="stat-item">
+                    <div class="stat-value">40%</div>
+                    <div class="stat-label">Cost Reduction</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">&lt;2s</div>
+                    <div class="stat-label">Response Time</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">99.9%</div>
+                    <div class="stat-label">Uptime SLA</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">500+</div>
+                    <div class="stat-label">Enterprise Clients</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section section-dark" id="features">
+        <div class="container">
+            <div class="section-header animate-on-scroll" data-animate>
+                <span class="section-badge">Full-Stack AI Solutions</span>
+                <h2 class="section-title">Everything you need to optimize transport at scale</h2>
+                <p class="section-subtitle">From single routes to entire fleets, our AI handles the complexity so you
+                    can focus on growth.</p>
+            </div>
+
+            <div class="features-grid stagger-children" data-animate>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                            <polyline points="2 17 12 22 22 17" />
+                            <polyline points="2 12 12 17 22 12" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">6 Algorithms</h3>
+                    <p class="feature-description">From Nearest Neighbor to Christofides, Dijkstra, and BMSSP,
+                        automatically selects the best
+                        algorithm for your use case.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Real-Time Processing</h3>
+                    <p class="feature-description">Sub-second optimization with intelligent caching. Handle thousands of
+                        requests per second.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Multi-Cluster</h3>
+                    <p class="feature-description">Optimize entire fleets with automatic employee clustering and
+                        capacity balancing.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Cloud Native</h3>
+                    <p class="feature-description">Docker, Kubernetes, auto-scaling. Deploy anywhere with
+                        production-ready infrastructure.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Enterprise Security</h3>
+                    <p class="feature-description">API key authentication, rate limiting, and audit logs. SOC 2
+                        compliant infrastructure.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 20V10" />
+                            <path d="M12 20V4" />
+                            <path d="M6 20v-6" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Analytics & Monitoring</h3>
+                    <p class="feature-description">Prometheus metrics, structured logging, and real-time dashboards for
+                        complete visibility.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Section -->
+    <section class="section section-dark" id="api">
+        <div class="container">
+            <div class="section-header animate-on-scroll" data-animate>
+                <span class="section-badge">Developer Experience</span>
+                <h2 class="section-title">Built for developers, loved by teams</h2>
+                <p class="section-subtitle">Simple REST API with comprehensive documentation. Integrate in minutes, not
+                    weeks.</p>
+            </div>
+
+            <div class="api-showcase animate-on-scroll" data-animate>
+                <div class="api-content">
+                    <h3>One API call is all you need</h3>
+                    <p>Our API is designed to be intuitive and powerful. Send your locations, get optimized routes back.
+                        It's that simple.</p>
+                    <ul class="api-features">
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            RESTful API with OpenAPI 3.1 spec
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            TypeScript SDK included
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            5 production-ready endpoints
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            99.9% uptime guarantee
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="code-window">
+                    <div class="code-header">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                        <span class="code-title">optimize.ts</span>
+                    </div>
+                    <div class="code-body">
+                        <pre><span class="comment">// Optimize a route with one API call</span>
+<span class="keyword">const</span> result = <span class="keyword">await</span> client.<span class="property">optimizeRoute</span>({
+  <span class="property">origin</span>: { 
+    <span class="property">lat</span>: <span class="number">34.0522</span>, 
+    <span class="property">lng</span>: <span class="number">-118.2437</span> 
+  },
+  <span class="property">destinations</span>: employees,
+  <span class="property">constraints</span>: { 
+    <span class="property">departureTime</span>: <span class="string">"08:00"</span> 
+  }
+});
+
+<span class="comment">// Result includes optimized route</span>
+console.<span class="property">log</span>(result.<span class="property">route</span>.<span class="property">totalDistance</span>);
+<span class="comment">// → 23.5 km (40% improvement)</span></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Endpoints Section -->
+    <section class="section section-dark" id="endpoints">
+        <div class="container">
+            <div class="section-header animate-on-scroll" data-animate>
+                <span class="section-badge">API Reference</span>
+                <h2 class="section-title">Complete API Documentation</h2>
+                <p class="section-subtitle">Everything you need to integrate route optimization into your application.
+                </p>
+            </div>
+
+            <div class="endpoints-grid stagger-children" data-animate>
+
+                <!-- Endpoint 1: Health -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <code class="endpoint-path">/api/v1/health</code>
+                        <span class="endpoint-tag system">System</span>
+                    </div>
+                    <p class="endpoint-description">Check API health and service status. Returns uptime and service
+                        availability info.</p>
+                    <div class="code-window small">
+                        <div class="code-header">
+                            <div class="code-dot red"></div>
+                            <div class="code-dot yellow"></div>
+                            <div class="code-dot green"></div>
+                            <span class="code-title">Response 200</span>
+                        </div>
+                        <div class="code-body">
+                            <pre>{
+  <span class="property">"status"</span>: <span class="string">"ok"</span>,
+  <span class="property">"version"</span>: <span class="string">"1.0.0"</span>,
+  <span class="property">"uptime"</span>: <span class="number">86400</span>,
+  <span class="property">"services"</span>: { 
+    <span class="property">"optimizer"</span>: <span class="boolean">true</span>, 
+    <span class="property">"osrm"</span>: <span class="boolean">true</span> 
+  }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Endpoint 2: Algorithms -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <code class="endpoint-path">/api/v1/algorithms</code>
+                        <span class="endpoint-tag system">System</span>
+                    </div>
+                    <p class="endpoint-description">List all available optimization algorithms with their properties and
+                        performance characteristics.</p>
+                    <div class="code-window small">
+                        <div class="code-header">
+                            <div class="code-dot red"></div>
+                            <div class="code-dot yellow"></div>
+                            <div class="code-dot green"></div>
+                            <span class="code-title">Response 200</span>
+                        </div>
+                        <div class="code-body">
+                            <pre>{
+  <span class="property">"algorithms"</span>: [
+    { 
+      <span class="property">"id"</span>: <span class="string">"christofides"</span>, 
+      <span class="property">"name"</span>: <span class="string">"Christofides"</span>, 
+      <span class="property">"guarantee"</span>: <span class="string">"1.5x optimal"</span> 
+    },
+    { 
+      <span class="property">"id"</span>: <span class="string">"genetic"</span>, 
+      <span class="property">"name"</span>: <span class="string">"Genetic Algorithm"</span>, 
+      <span class="property">"guarantee"</span>: <span class="string">"~optimal"</span> 
+    },
+    { 
+      <span class="property">"id"</span>: <span class="string">"nearest_neighbor"</span>, 
+      <span class="property">"name"</span>: <span class="string">"Nearest Neighbor"</span>, 
+      <span class="property">"guarantee"</span>: <span class="string">"fast"</span> 
+    },
+    { 
+      <span class="property">"id"</span>: <span class="string">"dijkstra"</span>, 
+      <span class="property">"name"</span>: <span class="string">"Dijkstra"</span>, 
+      <span class="property">"guarantee"</span>: <span class="string">"optimal path"</span> 
+    },
+    { 
+      <span class="property">"id"</span>: <span class="string">"bmssp"</span>, 
+      <span class="property">"name"</span>: <span class="string">"BMSSP"</span>, 
+      <span class="property">"guarantee"</span>: <span class="string">"advanced"</span> 
+    }
+  ]
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Endpoint 3: Optimize Route (Featured) -->
+                <div class="endpoint-card featured">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <code class="endpoint-path">/api/v1/optimize/route</code>
+                        <span class="endpoint-tag optimization">Optimization</span>
+                    </div>
+                    <p class="endpoint-description">Optimize a single route for one vehicle. Supports multiple
+                        algorithms, real-road routing, and traffic awareness.</p>
+
+                    <div class="endpoint-params">
+                        <h4>Request Body</h4>
+                        <table class="params-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Description</th>
+                                    <th>Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>origin</code></td>
+                                    <td>Starting location (lat, lng, id)</td>
+                                    <td><span class="required">required</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>destinations</code></td>
+                                    <td>Array of pickup locations</td>
+                                    <td><span class="required">required</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>constraints</code></td>
+                                    <td>Time constraints {departureTime}</td>
+                                    <td><span class="required">required</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>options.algorithm</code></td>
+                                    <td>auto | christofides | genetic | nearest_neighbor | dijkstra | bmssp</td>
+                                    <td><span class="optional">optional</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>options.useRealRoads</code></td>
+                                    <td>Use OSRM routing (default: true)</td>
+                                    <td><span class="optional">optional</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="code-window small">
+                        <div class="code-header">
+                            <div class="code-dot red"></div>
+                            <div class="code-dot yellow"></div>
+                            <div class="code-dot green"></div>
+                            <span class="code-title">Example Request</span>
+                        </div>
+                        <div class="code-body">
+                            <pre><span class="keyword">POST</span> /api/v1/optimize/route
+{
+  <span class="property">"origin"</span>: { 
+    <span class="property">"id"</span>: <span class="string">"office"</span>, 
+    <span class="property">"lat"</span>: <span class="number">34.05</span>, 
+    <span class="property">"lng"</span>: <span class="number">-118.24</span> 
+  },
+  <span class="property">"destinations"</span>: [
+    { 
+      <span class="property">"id"</span>: <span class="string">"emp1"</span>, 
+      <span class="property">"lat"</span>: <span class="number">34.06</span>, 
+      <span class="property">"lng"</span>: <span class="number">-118.30</span> 
+    },
+    { 
+      <span class="property">"id"</span>: <span class="string">"emp2"</span>, 
+      <span class="property">"lat"</span>: <span class="number">34.08</span>, 
+      <span class="property">"lng"</span>: <span class="number">-118.28</span> 
+    }
+  ],
+  <span class="property">"constraints"</span>: { 
+    <span class="property">"departureTime"</span>: <span class="string">"08:00"</span> 
+  },
+  <span class="property">"options"</span>: { 
+    <span class="property">"algorithm"</span>: <span class="string">"auto"</span> 
+  }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Endpoint 4: Multi-Cluster (Featured) -->
+                <div class="endpoint-card featured">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <code class="endpoint-path">/api/v1/optimize/multi-cluster</code>
+                        <span class="endpoint-tag optimization">Optimization</span>
+                    </div>
+                    <p class="endpoint-description">Optimize routes for multiple vehicles simultaneously. Automatically
+                        clusters employees and balances cab loads.</p>
+
+                    <div class="endpoint-params">
+                        <h4>Request Body</h4>
+                        <table class="params-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Description</th>
+                                    <th>Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>office</code></td>
+                                    <td>Office location (lat, lng, id)</td>
+                                    <td><span class="required">required</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>employees</code></td>
+                                    <td>Array of all employee locations</td>
+                                    <td><span class="required">required</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>cabs</code></td>
+                                    <td>Array of cabs with {id, capacity}</td>
+                                    <td><span class="required">required</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>config.routeOptimizationAlgorithm</code></td>
+                                    <td>Algorithm for each route</td>
+                                    <td><span class="optional">optional</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="code-window small">
+                        <div class="code-header">
+                            <div class="code-dot red"></div>
+                            <div class="code-dot yellow"></div>
+                            <div class="code-dot green"></div>
+                            <span class="code-title">Response 200</span>
+                        </div>
+                        <div class="code-body">
+                            <pre>{
+  <span class="property">"success"</span>: <span class="boolean">true</span>,
+  <span class="property">"processingTimeMs"</span>: <span class="number">245</span>,
+  <span class="property">"result"</span>: {
+    <span class="property">"clusters"</span>: [
+      { 
+        <span class="property">"cabId"</span>: <span class="string">"cab1"</span>, 
+        <span class="property">"employees"</span>: [...], 
+        <span class="property">"route"</span>: {...} 
+      },
+      { 
+        <span class="property">"cabId"</span>: <span class="string">"cab2"</span>, 
+        <span class="property">"employees"</span>: [...], 
+        <span class="property">"route"</span>: {...} 
+      }
+    ],
+    <span class="property">"metrics"</span>: { 
+      <span class="property">"totalDistance"</span>: <span class="number">45.2</span>, 
+      <span class="property">"averageLoadFactor"</span>: <span class="number">0.85</span> 
+    }
+  }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Endpoint 5: Distance Matrix -->
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <code class="endpoint-path">/api/v1/matrix/distance</code>
+                        <span class="endpoint-tag utilities">Utilities</span>
+                    </div>
+                    <p class="endpoint-description">Calculate distance/duration matrix between all pairs of coordinates.
+                        Uses real road network by default.</p>
+                    <div class="code-window small">
+                        <div class="code-header">
+                            <div class="code-dot red"></div>
+                            <div class="code-dot yellow"></div>
+                            <div class="code-dot green"></div>
+                            <span class="code-title">Example Request</span>
+                        </div>
+                        <div class="code-body">
+                            <pre>{
+  <span class="property">"coordinates"</span>: [
+    { 
+      <span class="property">"lat"</span>: <span class="number">34.05</span>, 
+      <span class="property">"lng"</span>: <span class="number">-118.24</span> 
+    },
+    { 
+      <span class="property">"lat"</span>: <span class="number">34.06</span>, 
+      <span class="property">"lng"</span>: <span class="number">-118.30</span> 
+    },
+    { 
+      <span class="property">"lat"</span>: <span class="number">34.08</span>, 
+      <span class="property">"lng"</span>: <span class="number">-118.28</span> 
+    }
+  ],
+  <span class="property">"useRealRoads"</span>: <span class="boolean">true</span>
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="endpoints-cta">
+                <a href="/openapi.yaml" class="btn btn-ghost">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    OpenAPI Spec
+                </a>
+                <a href="/login" class="btn btn-gradient">
+                    Get API Key
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- Pricing Section -->
+        <section class="section section-dark" id="pricing">
+            <div class="container">
+                <div class="section-header animate-on-scroll" data-animate>
+                    <span class="section-badge">Pricing</span>
+                    <h2 class="section-title">Simple, transparent pricing</h2>
+                    <p class="section-subtitle">Start free, scale as you grow. No hidden fees, no surprises.</p>
+                </div>
+
+                <div class="pricing-grid stagger-children" data-animate>
+                    <div class="pricing-card">
+                        <div class="pricing-tier">Free</div>
+                        <div class="pricing-price">$0<span>/mo</span></div>
+                        <p class="pricing-description">Perfect for testing and small projects</p>
+                        <ul class="pricing-features">
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                100 requests/day
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Up to 20 destinations
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Basic algorithms
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Community support
+                            </li>
+                        </ul>
+                        <a href="demo.html" class="btn btn-ghost">Get Started</a>
+                    </div>
+
+                    <div class="pricing-card featured">
+                        <div class="pricing-badge">Most Popular</div>
+                        <div class="pricing-tier">Pro</div>
+                        <div class="pricing-price">$99<span>/mo</span></div>
+                        <p class="pricing-description">For growing businesses</p>
+                        <ul class="pricing-features">
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                1,000 requests/day
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Up to 100 destinations
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                All algorithms
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Traffic data
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Email support
+                            </li>
+                        </ul>
+                        <a href="demo.html" class="btn btn-gradient">Start Pro Trial</a>
+                    </div>
+
+                    <div class="pricing-card">
+                        <div class="pricing-tier">Enterprise</div>
+                        <div class="pricing-price">Custom</div>
+                        <p class="pricing-description">For large organizations</p>
+                        <ul class="pricing-features">
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Unlimited requests
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                500+ destinations
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Self-hosted option
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Custom SLA
+                            </li>
+                            <li>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Dedicated support
+                            </li>
+                        </ul>
+                        <a href="#" class="btn btn-ghost">Contact Sales</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta">
+            <div class="container">
+                <div class="cta-content animate-on-scroll" data-animate>
+                    <h2 class="cta-title">The future of transport<br>optimization starts here</h2>
+                    <p class="cta-subtitle">Join 500+ enterprises using RouteOptimizer AI to transform their operations.
+                    </p>
+                    <div class="cta-actions">
+                        <a href="demo.html" class="btn btn-blue btn-lg">Start Free Trial</a>
+                        <a href="#" class="btn btn-ghost btn-lg">Talk to Sales</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-brand">
+                        <a href="#" class="nav-logo">
+                            <div class="nav-logo-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white"
+                                    stroke-width="2.5">
+                                    <path
+                                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                </svg>
+                            </div>
+                            RouteOptimizer AI
+                        </a>
+                        <p>AI-powered transport route optimization for modern enterprises. Reduce costs, save time,
+                            scale
+                            effortlessly.</p>
+                    </div>
+
+                    <div class="footer-links">
+                        <h4>Product</h4>
+                        <a href="#features">Features</a>
+                        <a href="#pricing">Pricing</a>
+                        <a href="#api">API</a>
+                        <a href="#">Changelog</a>
+                    </div>
+
+                    <div class="footer-links">
+                        <h4>Developers</h4>
+                        <a href="#">Documentation</a>
+                        <a href="#">API Reference</a>
+                        <a href="#">SDK</a>
+                        <a href="#">Status</a>
+                    </div>
+
+                    <div class="footer-links">
+                        <h4>Company</h4>
+                        <a href="#">About</a>
+                        <a href="#">Blog</a>
+                        <a href="#">Careers</a>
+                        <a href="#">Contact</a>
+                    </div>
+                </div>
+
+                <div class="footer-bottom">
+                    <p class="footer-copy">© 2024 RouteOptimizer AI. All rights reserved.</p>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Twitter">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                        </a>
+                        <a href="#" aria-label="GitHub">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                            </svg>
+                        </a>
+                        <a href="#" aria-label="LinkedIn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            // Navigation scroll effect
+            const nav = document.getElementById('nav');
+            let lastScroll = 0;
+
+            window.addEventListener('scroll', () => {
+                const currentScroll = window.pageYOffset;
+
+                if (currentScroll > 50) {
+                    nav.classList.add('scrolled');
+                } else {
+                    nav.classList.remove('scrolled');
+                }
+
+                lastScroll = currentScroll;
+            });
+
+            // Scroll-triggered animations
+            const animateElements = document.querySelectorAll('[data-animate]');
+
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            animateElements.forEach(el => {
+                observer.observe(el);
+            });
+
+            // Smooth scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+            // Theme Toggle
+            const themeToggle = document.getElementById('theme-toggle');
+            const html = document.documentElement;
+
+            // Check for saved theme preference or use system preference
+            const savedTheme = localStorage.getItem('theme');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+            // Initial Theme Setup
+            if (savedTheme) {
+                html.setAttribute('data-theme', savedTheme);
+            } else {
+                html.setAttribute('data-theme', systemTheme);
+            }
+
+            // Toggle Event
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        </script>
+</body>
+
+</html>
