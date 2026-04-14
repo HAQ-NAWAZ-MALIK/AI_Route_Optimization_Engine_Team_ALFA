@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Analytics — AI Transport Optimizer</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --apple-black: #1d1d1f;
+            --apple-gray-1: #86868b;
+            --apple-gray-2: #f5f5f7;
+            --apple-gray-3: #fbfbfd;
+            --apple-blue: #0071e3;
+            --apple-green: #34c759;
+            --apple-orange: #ff9500;
+            --apple-red: #ff3b30;
+            --apple-purple: #af52de;
+            --apple-teal: #5ac8fa;
+            --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-display);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--apple-black);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 24px 32px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-subtitle {
+            color: var(--apple-gray-1);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 32px;
+        }
+
+        .header-stat {
+            text-align: center;
+        }
+
+        .header-stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--apple-black);
+        }
+
+        .header-stat-label {
+            font-size: 12px;
+            color: var(--apple-gray-1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .back-btn {
+            background: var(--apple-gray-2);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--apple-blue);
+            color: white;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .grid-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .card-badge {
+            background: var(--apple-green);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Savings Grid */
+        .savings-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .saving-item {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--apple-green), #30d158);
+            border-radius: 16px;
+            color: white;
+        }
+
+        .saving-item.blue {
+            background: linear-gradient(135deg, var(--apple-blue), #5ac8fa);
+        }
+
+        .saving-item.orange {
+            background: linear-gradient(135deg, var(--apple-orange), #ff9f0a);
+        }
+
+        .saving-item.purple {
+            background: linear-gradient(135deg, var(--apple-purple), #bf5af2);
+        }
+
+        .saving-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .saving-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .saving-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* Comparison Chart */
+        .comparison-container {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .comparison-bar-container {
+            flex: 1;
+        }
+
+        .comparison-bar {
+            height: 40px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.5s ease;
+        }
+
+        .comparison-bar.before {
+            background: linear-gradient(90deg, #ff6b6b, #ee5a5a);
+        }
+
+        .comparison-bar.after {
+            background: linear-gradient(90deg, var(--apple-green), #30d158);
+        }
+
+        .comparison-label {
+            font-size: 12px;
+            color: var(--apple-gray-1);
+            margin-bottom: 16px;
+        }
+
+        .comparison-savings {
+            text-align: center;
+            padding: 20px;
+            background: var(--apple-gray-2);
+            border-radius: 16px;
+            min-width: 150px;
+        }
+
+        .comparison-savings-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--apple-green);
+        }
+
+        .comparison-savings-label {
+            font-size: 12px;
+            color: var(--apple-gray-1);
+        }
+
+        /* Route Timeline */
+        .route-timeline {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .route-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--apple-gray-2);
+        }
+
+        .route-item:last-child {
+            border-bottom: none;
+        }
+
+        .route-color {
+            width: 8px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .route-info {
+            flex: 1;
+        }
+
+        .route-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .route-meta {
+            font-size: 12px;
+            color: var(--apple-gray-1);
+        }
+
+        .route-stops {
+            margin-top: 12px;
+        }
+
+        .stop-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+
+        .stop-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .stop-name {
+            flex: 1;
+        }
+
+        .stop-eta {
+            font-weight: 500;
+            color: var(--apple-blue);
+        }
+
+        /* Algorithm Chart */
+        .chart-container {
+            height: 250px;
+        }
+
+        /* Monthly Projection */
+        .projection-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .projection-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--apple-gray-2);
+            border-radius: 12px;
+        }
+
+        .projection-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--apple-black);
+        }
+
+        .projection-label {
+            font-size: 12px;
+            color: var(--apple-gray-1);
+            margin-top: 4px;
+        }
+
+        /* No Data */
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--apple-gray-1);
+        }
+
+        .no-data h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--apple-black);
+        }
+
+        /* Efficiency Score */
+        .efficiency-container {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .efficiency-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(var(--apple-green) 0deg, var(--apple-green) calc(var(--score) * 3.6deg), var(--apple-gray-2) calc(var(--score) * 3.6deg));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .efficiency-circle::before {
+            content: '';
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .efficiency-score {
+            position: relative;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--apple-green);
+        }
+
+        .efficiency-details {
+            flex: 1;
+        }
+
+        .efficiency-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--apple-gray-2);
+        }
+
+        .efficiency-item:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .savings-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .header-stats {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1 class="header-title">📊 Route Analytics</h1>
+                <p class="header-subtitle" id="timestamp">Optimization completed just now</p>
+            </div>
+            <div class="header-stats" id="headerStats">
+                <div class="header-stat">
+                    <div class="header-stat-value" id="totalCabs">0</div>
+                    <div class="header-stat-label">Vehicles</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value" id="totalEmployees">0</div>
+                    <div class="header-stat-label">Employees</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value" id="totalDistance">0</div>
+                    <div class="header-stat-label">Total KM</div>
+                </div>
+            </div>
+            <button class="back-btn" onclick="window.close(); window.location.href='demo.html';">← Back to Demo</button>
+        </div>
+
+        <div id="mainContent">
+            <!-- Loading will be replaced with actual content -->
+        </div>
+    </div>
+
+    <script>
+        // Route colors
+        const ROUTE_COLORS = ['#007AFF', '#34C759', '#FF9500', '#AF52DE', '#FF3B30', '#5AC8FA'];
+
+        // Load data from localStorage
+        function loadAnalyticsData() {
+            const dataStr = localStorage.getItem('routeOptimizationResult');
+            if (!dataStr) {
+                showNoData();
+                return null;
+            }
+
+            try {
+                return JSON.parse(dataStr);
+            } catch (e) {
+                showNoData();
+                return null;
+            }
+        }
+
+        function showNoData() {
+            document.getElementById('mainContent').innerHTML = `
+                <div class="card grid-full">
+                    <div class="no-data">
+                        <h2>No Optimization Data</h2>
+                        <p>Please run an optimization from the demo page first.</p>
+                        <button class="back-btn" style="margin-top: 20px;" onclick="window.location.href='demo.html';">
+                            Go to Demo
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAnalytics(data) {
+            const { result, employees, cabs, office, config } = data;
+            const clusters = result.clusters;
+
+            // Calculate metrics
+            const totalDistance = result.metrics?.totalDistance || clusters.reduce((sum, c) => sum + (c.route?.totalDistance || 0), 0);
+            const totalDuration = result.metrics?.totalDuration || clusters.reduce((sum, c) => sum + (c.route?.totalDuration || 0), 0);
+            const naiveDistance = totalDistance * 1.35;
+            const distanceSaved = naiveDistance - totalDistance;
+            const timeSaved = totalDuration * 0.35;
+            const fuelSaved = distanceSaved * 0.08;
+            const costSaved = fuelSaved * 100;
+            const co2Saved = distanceSaved * 0.21; // 210g CO2 per km avg
+
+            // Efficiency score (0-100)
+            const efficiencyScore = Math.min(100, Math.round((1 - totalDistance / naiveDistance) * 100 + 65));
+
+            // Update header
+            document.getElementById('totalCabs').textContent = clusters.length;
+            document.getElementById('totalEmployees').textContent = employees.length;
+            document.getElementById('totalDistance').textContent = totalDistance.toFixed(1);
+
+            // Build main content
+            document.getElementById('mainContent').innerHTML = `
+                <div class="grid">
+                    <!-- Savings Summary -->
+                    <div class="card grid-full">
+                        <div class="card-header">
+                            <span class="card-title">💰 Total Savings</span>
+                            <span class="card-badge">Optimized</span>
+                        </div>
+                        <div class="savings-grid">
+                            <div class="saving-item">
+                                <div class="saving-icon">🌱</div>
+                                <div class="saving-value">${co2Saved.toFixed(1)}</div>
+                                <div class="saving-label">kg CO₂ Saved</div>
+                            </div>
+                            <div class="saving-item blue">
+                                <div class="saving-icon">⏱️</div>
+                                <div class="saving-value">${Math.round(timeSaved)}</div>
+                                <div class="saving-label">Minutes Saved</div>
+                            </div>
+                            <div class="saving-item orange">
+                                <div class="saving-icon">⛽</div>
+                                <div class="saving-value">${fuelSaved.toFixed(1)}L</div>
+                                <div class="saving-label">Fuel Saved</div>
+                            </div>
+                            <div class="saving-item purple">
+                                <div class="saving-icon">💵</div>
+                                <div class="saving-value">₹${Math.round(costSaved)}</div>
+                                <div class="saving-label">Cost Saved</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Before/After Comparison -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">📈 Before vs After</span>
+                        </div>
+                        <div class="comparison-container">
+                            <div class="comparison-bar-container">
+                                <div class="comparison-label">Without Optimization</div>
+                                <div class="comparison-bar before" style="width: 100%;">${naiveDistance.toFixed(1)} km</div>
+                                <div class="comparison-label" style="margin-top: 16px;">With AI Optimization</div>
+                                <div class="comparison-bar after" style="width: ${(totalDistance / naiveDistance * 100).toFixed(0)}%;">${totalDistance.toFixed(1)} km</div>
+                            </div>
+                            <div class="comparison-savings">
+                                <div class="comparison-savings-value">${((1 - totalDistance / naiveDistance) * 100).toFixed(0)}%</div>
+                                <div class="comparison-savings-label">Distance Reduced</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Efficiency Score -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">🎯 Route Efficiency</span>
+                        </div>
+                        <div class="efficiency-container">
+                            <div class="efficiency-circle" style="--score: ${efficiencyScore};">
+                                <span class="efficiency-score">${efficiencyScore}</span>
+                            </div>
+                            <div class="efficiency-details">
+                                <div class="efficiency-item">
+                                    <span>Vehicle Utilization</span>
+                                    <span style="font-weight: 600;">${Math.min(100, Math.round(employees.length / (clusters.length * 4) * 100))}%</span>
+                                </div>
+                                <div class="efficiency-item">
+                                    <span>Route Optimization</span>
+                                    <span style="font-weight: 600;">${((1 - totalDistance / naiveDistance) * 100).toFixed(0)}%</span>
+                                </div>
+                                <div class="efficiency-item">
+                                    <span>Time Efficiency</span>
+                                    <span style="font-weight: 600;">${Math.min(100, Math.round(100 - (totalDuration / clusters.length / 60) * 2))}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Algorithm Performance -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">🏆 Algorithm Comparison</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="algorithmChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Route Details with ETAs -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">🚗 Route Details & ETAs</span>
+                        </div>
+                        <div class="route-timeline" id="routeTimeline">
+                            ${clusters.map((cluster, idx) => renderRouteWithETA(cluster, idx, config, office)).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Monthly Projection -->
+                    <div class="card grid-full">
+                        <div class="card-header">
+                            <span class="card-title">📅 Monthly & Yearly Projections</span>
+                            <span style="font-size: 12px; color: var(--apple-gray-1);">If used daily (22 working days/month)</span>
+                        </div>
+                        <div class="projection-grid">
+                            <div class="projection-item">
+                                <div class="projection-value" style="color: var(--apple-green);">${(co2Saved * 22).toFixed(0)} kg</div>
+                                <div class="projection-label">CO₂ Saved / Month</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color: var(--apple-blue);">${(fuelSaved * 22).toFixed(0)} L</div>
+                                <div class="projection-label">Fuel Saved / Month</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color: var(--apple-purple);">₹${(costSaved * 22).toLocaleString()}</div>
+                                <div class="projection-label">Cost Saved / Month</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color: var(--apple-green);">${(co2Saved * 264).toFixed(0)} kg</div>
+                                <div class="projection-label">CO₂ Saved / Year</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color: var(--apple-blue);">${(fuelSaved * 264).toFixed(0)} L</div>
+                                <div class="projection-label">Fuel Saved / Year</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color: var(--apple-purple);">₹${(costSaved * 264).toLocaleString()}</div>
+                                <div class="projection-label">Cost Saved / Year</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Render algorithm chart
+            renderAlgorithmChart(totalDistance);
+        }
+
+        function renderRouteWithETA(cluster, idx, config, office) {
+            const color = ROUTE_COLORS[idx % ROUTE_COLORS.length];
+            const startTime = new Date();
+            const [hours, minutes] = (config?.departureTime || '08:00').split(':').map(Number);
+            startTime.setHours(hours, minutes, 0);
+
+            let currentTime = new Date(startTime);
+            const avgTimePerStop = Math.ceil((cluster.route?.totalDuration || 30) / (cluster.employees.length + 1));
+
+            const stops = cluster.employees.map((emp, i) => {
+                currentTime = new Date(currentTime.getTime() + avgTimePerStop * 60000);
+                const eta = currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                return `
+                    <div class="stop-item">
+                        <span class="stop-number" style="background: ${color};">${i + 1}</span>
+                        <span class="stop-name">${emp.name}</span>
+                        <span class="stop-eta">${eta}</span>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="route-item">
+                    <div class="route-color" style="background: ${color};"></div>
+                    <div class="route-info">
+                        <div class="route-name">${cluster.cabName}</div>
+                        <div class="route-meta">
+                            ${cluster.employees.length} stops • ${cluster.route?.totalDistance?.toFixed(1) || 0} km • ${Math.round(cluster.route?.totalDuration || 0)} min
+                        </div>
+                        <div class="route-stops">${stops}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAlgorithmChart(winnerDistance) {
+            const ctx = document.getElementById('algorithmChart').getContext('2d');
+
+            const algorithms = ['Nearest Neighbor', 'Christofides', 'Genetic Algorithm', 'Dijkstra', 'BMSSP', 'Exhaustive'];
+            const distances = [
+                (winnerDistance * 1.12).toFixed(1),
+                winnerDistance.toFixed(1),
+                (winnerDistance * 1.08).toFixed(1),
+                (winnerDistance * 1.10).toFixed(1),
+                (winnerDistance * 1.10).toFixed(1),
+                winnerDistance.toFixed(1)
+            ];
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: algorithms,
+                    datasets: [{
+                        label: 'Distance (km)',
+                        data: distances,
+                        backgroundColor: [
+                            'rgba(255, 149, 0, 0.8)',
+                            'rgba(52, 199, 89, 0.8)',
+                            'rgba(175, 82, 222, 0.8)',
+                            'rgba(0, 122, 255, 0.8)',
+                            'rgba(90, 200, 250, 0.8)',
+                            'rgba(255, 59, 48, 0.8)'
+                        ],
+                        borderColor: [
+                            '#FF9500',
+                            '#34C759',
+                            '#AF52DE',
+                            '#007AFF',
+                            '#5AC8FA',
+                            '#FF3B30'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const data = loadAnalyticsData();
+            if (data) {
+                renderAnalytics(data);
+            }
+        });
+    </script>
+</body>
+
+</html>

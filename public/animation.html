@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Route Optimizer - Neural Transport System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050505;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            color: #06b6d4;
+        }
+
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Main HUD */
+        .main-hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(5, 5, 5, 0.92);
+            border: 2px solid #06b6d4;
+            padding: 20px;
+            min-width: 380px;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.4), inset 0 0 20px rgba(6, 182, 212, 0.1);
+        }
+
+        .hud-title {
+            font-size: 20px;
+            color: #10b981;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-align: center;
+            border-bottom: 1px solid #06b6d4;
+            padding-bottom: 10px;
+        }
+
+        .current-step {
+            background: rgba(6, 182, 212, 0.15);
+            border: 1px solid #06b6d4;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .step-number {
+            color: #10b981;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .step-desc {
+            color: #06b6d4;
+            margin-top: 5px;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .metric {
+            background: rgba(6, 182, 212, 0.08);
+            border: 1px solid #06b6d433;
+            padding: 10px;
+            font-size: 11px;
+        }
+
+        .metric-label {
+            color: #06b6d4;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            color: #10b981;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .metric-value.bad {
+            color: #ef4444;
+        }
+
+        .metric-value.warning {
+            color: #f59e0b;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(6, 182, 212, 0.2);
+            border: 1px solid #06b6d4;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #06b6d4, #10b981);
+            width: 0%;
+            transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Algorithm Dashboard */
+        .algo-dashboard {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(5, 5, 5, 0.92);
+            border: 2px solid #06b6d4;
+            padding: 20px;
+            min-width: 420px;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.4), inset 0 0 20px rgba(6, 182, 212, 0.1);
+        }
+
+        .algo-title {
+            font-size: 16px;
+            color: #10b981;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+            border-bottom: 1px solid #06b6d4;
+            padding-bottom: 10px;
+        }
+
+        .algo-item {
+            background: rgba(6, 182, 212, 0.08);
+            border: 1px solid #06b6d433;
+            padding: 12px;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .algo-item.active {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.12);
+            animation: pulse-border 1.5s infinite;
+        }
+
+        .algo-item.winner {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        @keyframes pulse-border {
+
+            0%,
+            100% {
+                border-color: #10b981;
+            }
+
+            50% {
+                border-color: #06b6d4;
+            }
+        }
+
+        .algo-name {
+            color: #06b6d4;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .algo-metrics {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .algo-metric {
+            color: #10b981;
+        }
+
+        .algo-progress {
+            height: 4px;
+            background: rgba(6, 182, 212, 0.2);
+            margin-top: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .algo-progress-fill {
+            height: 100%;
+            background: #10b981;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .winner-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #10b981;
+            color: #050505;
+            padding: 4px 12px;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 2px;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+        }
+
+        /* Entity Counter */
+        .entity-counter {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(5, 5, 5, 0.92);
+            border: 2px solid #06b6d4;
+            padding: 15px 20px;
+            min-width: 300px;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
+        }
+
+        .entity-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+
+        .entity-label {
+            color: #06b6d4;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .entity-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .entity-value {
+            color: #10b981;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            color: #050505;
+            border: none;
+            padding: 18px 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            box-shadow: 0 0 40px rgba(6, 182, 212, 0.6), 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 0 50px rgba(16, 185, 129, 0.8), 0 6px 20px rgba(0, 0, 0, 0.6);
+            transform: scale(1.05);
+        }
+
+        .btn:disabled {
+            background: #1a1a1a;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Results Card */
+        .results-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 20;
+            background: rgba(5, 5, 5, 0.98);
+            border: 3px solid #10b981;
+            padding: 40px;
+            min-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(16, 185, 129, 0.6), inset 0 0 30px rgba(16, 185, 129, 0.1);
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .results-card.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .results-title {
+            font-size: 28px;
+            color: #10b981;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .results-subtitle {
+            font-size: 14px;
+            color: #06b6d4;
+            margin-bottom: 30px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .result-stat {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid #06b6d4;
+            padding: 20px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #06b6d4;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            color: #10b981;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+
+        .winner-algo {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid #10b981;
+        }
+
+        .winner-label {
+            color: #06b6d4;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .winner-name {
+            color: #10b981;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 32px;
+            height: 32px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid #ef4444;
+            color: #ef4444;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #ef4444;
+            color: #050505;
+            transform: rotate(90deg);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+        }
+
+        /* Cluster Info Panel */
+        .cluster-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(5, 5, 5, 0.92);
+            border: 2px solid #06b6d4;
+            padding: 15px;
+            min-width: 250px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
+        }
+
+        .cluster-title {
+            font-size: 14px;
+            color: #10b981;
+            margin-bottom: 10px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .cluster-item {
+            background: rgba(6, 182, 212, 0.08);
+            border-left: 3px solid #06b6d4;
+            padding: 8px 12px;
+            margin: 8px 0;
+            font-size: 11px;
+        }
+
+        .cluster-item.assigned {
+            border-left-color: #10b981;
+            background: rgba(16, 185, 129, 0.12);
+        }
+
+        .cluster-bus {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .cluster-students {
+            color: #06b6d4;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+
+    <!-- Main HUD -->
+    <div class="main-hud">
+        <div class="hud-title">⚡ AI ROUTE OPTIMIZER</div>
+
+        <div class="current-step">
+            <div class="step-number" id="stepNumber">INITIALIZING...</div>
+            <div class="step-desc" id="stepDesc">Preparing neural optimization engine</div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="mainProgress"></div>
+        </div>
+
+        <div class="metric-grid">
+            <div class="metric">
+                <div class="metric-label">Students/Employees</div>
+                <div class="metric-value" id="studentCount">--</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Available Buses</div>
+                <div class="metric-value" id="busCount">--</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Total Capacity</div>
+                <div class="metric-value" id="totalCapacity">--</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Coverage</div>
+                <div class="metric-value warning" id="coverage">--</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Clusters Formed</div>
+                <div class="metric-value" id="clusterCount">--</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Processing Time</div>
+                <div class="metric-value" id="processingTime">0.00s</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Total Distance</div>
+                <div class="metric-value bad" id="totalDistance">--</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Est. Fuel Cost</div>
+                <div class="metric-value bad" id="fuelCost">--</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Algorithm Dashboard -->
+    <div class="algo-dashboard" id="algoDash" style="opacity: 0;">
+        <div class="algo-title">🧠 ALGORITHM RACE</div>
+
+        <div class="algo-item" id="algo1">
+            <div class="algo-name">① CHRISTOFIDES TSP</div>
+            <div class="algo-metrics">
+                <span>Distance: <span class="algo-metric" id="a1-dist">--</span></span>
+                <span>Time: <span class="algo-metric" id="a1-time">--</span></span>
+                <span>Cost: <span class="algo-metric" id="a1-cost">--</span></span>
+            </div>
+            <div class="algo-progress">
+                <div class="algo-progress-fill" id="a1-progress"></div>
+            </div>
+        </div>
+
+        <div class="algo-item" id="algo2">
+            <div class="algo-name">② GENETIC ALGORITHM</div>
+            <div class="algo-metrics">
+                <span>Distance: <span class="algo-metric" id="a2-dist">--</span></span>
+                <span>Time: <span class="algo-metric" id="a2-time">--</span></span>
+                <span>Cost: <span class="algo-metric" id="a2-cost">--</span></span>
+            </div>
+            <div class="algo-progress">
+                <div class="algo-progress-fill" id="a2-progress"></div>
+            </div>
+        </div>
+
+        <div class="algo-item" id="algo3">
+            <div class="algo-name">③ NEAREST NEIGHBOR</div>
+            <div class="algo-metrics">
+                <span>Distance: <span class="algo-metric" id="a3-dist">--</span></span>
+                <span>Time: <span class="algo-metric" id="a3-time">--</span></span>
+                <span>Cost: <span class="algo-metric" id="a3-cost">--</span></span>
+            </div>
+            <div class="algo-progress">
+                <div class="algo-progress-fill" id="a3-progress"></div>
+            </div>
+        </div>
+
+        <div class="algo-item" id="algo4">
+            <div class="algo-name">④ SIMULATED ANNEALING</div>
+            <div class="algo-metrics">
+                <span>Distance: <span class="algo-metric" id="a4-dist">--</span></span>
+                <span>Time: <span class="algo-metric" id="a4-time">--</span></span>
+                <span>Cost: <span class="algo-metric" id="a4-cost">--</span></span>
+            </div>
+            <div class="algo-progress">
+                <div class="algo-progress-fill" id="a4-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cluster Panel -->
+    <div class="cluster-panel" id="clusterPanel" style="opacity: 0;">
+        <div class="cluster-title">📍 BUS ASSIGNMENTS</div>
+        <div id="clusterList"></div>
+    </div>
+
+    <!-- Entity Counter -->
+    <div class="entity-counter">
+        <div class="entity-row">
+            <div class="entity-label">
+                <span class="entity-icon" style="background: #ef4444;"></span>
+                Students (Unassigned)
+            </div>
+            <div class="entity-value" id="unassignedCount">0</div>
+        </div>
+        <div class="entity-row">
+            <div class="entity-label">
+                <span class="entity-icon" style="background: #f59e0b;"></span>
+                Clusters Forming
+            </div>
+            <div class="entity-value" id="clusteringCount">0</div>
+        </div>
+        <div class="entity-row">
+            <div class="entity-label">
+                <span class="entity-icon" style="background: #10b981;"></span>
+                Students Assigned
+            </div>
+            <div class="entity-value" id="assignedCount">0</div>
+        </div>
+        <div class="entity-row">
+            <div class="entity-label">
+                <span class="entity-icon" style="background: #06b6d4;"></span>
+                Active Buses
+            </div>
+            <div class="entity-value" id="activeBusCount">0</div>
+        </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <button class="btn" id="runBtn">🚀 RUN AI ROUTE OPTIMIZER MODEL</button>
+    </div>
+
+    <!-- Results Card -->
+    <div class="results-card" id="resultsCard">
+        <button class="close-btn" id="closeResults">×</button>
+        <div class="results-title">✨ OPTIMIZATION COMPLETE</div>
+        <div class="results-subtitle">Winner selected in <span id="totalTime">1.89</span> seconds</div>
+
+        <div class="results-grid">
+            <div class="result-stat">
+                <div class="stat-label">Distance Saved</div>
+                <div class="stat-value" id="distSaved">42%</div>
+            </div>
+            <div class="result-stat">
+                <div class="stat-label">Time Saved</div>
+                <div class="stat-value" id="timeSaved">38%</div>
+            </div>
+            <div class="result-stat">
+                <div class="stat-label">Cost Reduction</div>
+                <div class="stat-value" id="costSaved">₹4,280</div>
+            </div>
+            <div class="result-stat">
+                <div class="stat-label">CO₂ Reduction</div>
+                <div class="stat-value" id="co2Saved">156kg</div>
+            </div>
+        </div>
+
+        <div class="winner-algo">
+            <div class="winner-label">🏆 WINNING ALGORITHM</div>
+            <div class="winner-name" id="winnerName">GENETIC ALGORITHM</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Colors
+        const COLORS = {
+            void: '#050505',
+            cyan: '#06b6d4',
+            green: '#10b981',
+            red: '#ef4444',
+            orange: '#f59e0b',
+            dimGray: '#1a1a1a',
+            gridLine: '#0f0f0f'
+        };
+
+        // State
+        let phase = 0; // 0=idle, 1=understanding, 2=clustering, 3=assignment, 4=optimization, 5=winner, 6=execution
+        let animationFrame = 0;
+        let startTime = 0;
+
+        // Entities
+        let students = [];
+        let buses = [];
+        let school = { x: canvas.width / 2, y: canvas.height / 2, label: 'SCHOOL HQ' };
+        let clusters = [];
+        let routes = [];
+        let algorithms = [
+            { name: 'Christofides TSP', progress: 0, distance: 0, time: 0, cost: 0 },
+            { name: 'Genetic Algorithm', progress: 0, distance: 0, time: 0, cost: 0 },
+            { name: 'Nearest Neighbor', progress: 0, distance: 0, time: 0, cost: 0 },
+            { name: 'Simulated Annealing', progress: 0, distance: 0, time: 0, cost: 0 }
+        ];
+        let winnerIndex = -1;
+
+        // Configuration
+        const NUM_STUDENTS = 45;
+        const NUM_BUSES = 5;
+        const BUS_CAPACITIES = [12, 10, 8, 10, 12];
+
+        // Initialize students
+        function initializeStudents() {
+            students = [];
+            for (let i = 0; i < NUM_STUDENTS; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 150 + Math.random() * 300;
+                students.push({
+                    x: school.x + Math.cos(angle) * distance,
+                    y: school.y + Math.sin(angle) * distance,
+                    id: i,
+                    cluster: -1,
+                    assigned: false,
+                    alpha: 0
+                });
+            }
+        }
+
+        // Initialize buses
+        function initializeBuses() {
+            buses = [];
+            const colors = ['#06b6d4', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899'];
+            for (let i = 0; i < NUM_BUSES; i++) {
+                buses.push({
+                    id: i,
+                    capacity: BUS_CAPACITIES[i],
+                    color: colors[i],
+                    students: [],
+                    route: [],
+                    x: school.x,
+                    y: school.y,
+                    pathIndex: 0,
+                    segmentProgress: 0
+                });
+            }
+        }
+
+        // Draw grid
+        function drawGrid() {
+            ctx.strokeStyle = COLORS.gridLine;
+            ctx.lineWidth = 1;
+            const spacing = 40;
+
+            for (let x = 0; x < canvas.width; x += spacing) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            for (let y = 0; y < canvas.height; y += spacing) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        // Draw school HQ
+        function drawSchool() {
+            const size = 24;
+
+            // Glow effect
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = COLORS.cyan;
+
+            // Building
+            ctx.fillStyle = COLORS.cyan;
+            ctx.fillRect(school.x - size / 2, school.y - size / 2, size, size);
+
+            // Roof
+            ctx.beginPath();
+            ctx.moveTo(school.x, school.y - size / 2 - 10);
+            ctx.lineTo(school.x - size / 2 - 5, school.y - size / 2);
+            ctx.lineTo(school.x + size / 2 + 5, school.y - size / 2);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+
+            // Label
+            ctx.fillStyle = COLORS.cyan;
+            ctx.font = 'bold 12px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText(school.label, school.x, school.y - 35);
+        }
+
+        // Draw students
+        function drawStudents() {
+            students.forEach(student => {
+                if (student.alpha > 0) {
+                    let color = COLORS.red;
+                    let size = 5;
+
+                    if (student.assigned) {
+                        color = buses[student.cluster].color;
+                        size = 6;
+                    } else if (student.cluster >= 0) {
+                        color = COLORS.orange;
+                        size = 5.5;
+                    }
+
+                    ctx.globalAlpha = student.alpha;
+                    ctx.fillStyle = color;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = color;
+                    ctx.beginPath();
+                    ctx.arc(student.x, student.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.globalAlpha = 1;
+                }
+            });
+        }
+
+        // Draw clusters
+        function drawClusters() {
+            if (phase >= 2 && phase < 6) {
+                clusters.forEach((cluster, idx) => {
+                    if (cluster.members.length > 0) {
+                        // Calculate cluster center
+                        let cx = 0, cy = 0;
+                        cluster.members.forEach(sid => {
+                            cx += students[sid].x;
+                            cy += students[sid].y;
+                        });
+                        cx /= cluster.members.length;
+                        cy /= cluster.members.length;
+
+                        // Draw cluster circle
+                        ctx.strokeStyle = cluster.busId !== -1 ? buses[cluster.busId].color : COLORS.orange;
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([5, 5]);
+                        ctx.globalAlpha = 0.4;
+                        ctx.beginPath();
+
+                        // Calculate radius
+                        let maxDist = 0;
+                        cluster.members.forEach(sid => {
+                            const dist = Math.hypot(students[sid].x - cx, students[sid].y - cy);
+                            maxDist = Math.max(maxDist, dist);
+                        });
+
+                        ctx.arc(cx, cy, maxDist + 20, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                        ctx.globalAlpha = 1;
+
+                        // Draw cluster label
+                        if (cluster.busId !== -1) {
+                            ctx.fillStyle = buses[cluster.busId].color;
+                            ctx.font = 'bold 11px Courier New';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(`BUS ${cluster.busId + 1}`, cx, cy - maxDist - 30);
+                            ctx.font = '10px Courier New';
+                            ctx.fillText(`${cluster.members.length}/${buses[cluster.busId].capacity}`, cx, cy - maxDist - 18);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Draw routes
+        function drawRoutes() {
+            if (phase >= 4) {
+                routes.forEach((route, idx) => {
+                    const bus = buses[idx];
+                    if (route.length > 1) {
+                        ctx.strokeStyle = bus.color;
+                        ctx.lineWidth = 3;
+                        ctx.shadowBlur = 15;
+                        ctx.shadowColor = bus.color;
+                        ctx.globalAlpha = phase === 6 ? 1 : 0.3;
+
+                        // Draw curved path segments
+                        ctx.beginPath();
+                        ctx.moveTo(route[0].x, route[0].y);
+
+                        for (let i = 0; i < route.length - 1; i++) {
+                            const start = route[i];
+                            const end = route[i + 1];
+
+                            // Calculate distance and angle
+                            const dx = end.x - start.x;
+                            const dy = end.y - start.y;
+                            const dist = Math.hypot(dx, dy);
+                            const angle = Math.atan2(dy, dx);
+
+                            // Create control points for curved path
+                            // Offset perpendicular to the line direction
+                            const curvature = 0.3; // How much the path curves
+                            const offsetAngle = angle + Math.PI / 2;
+
+                            // Add some variation based on route index for uniqueness
+                            const variation = Math.sin(idx * 1.5 + i * 0.7) * 0.5 + 0.5;
+                            const offset = dist * curvature * variation;
+
+                            // Calculate control point (curved midpoint)
+                            const midX = (start.x + end.x) / 2 + Math.cos(offsetAngle) * offset;
+                            const midY = (start.y + end.y) / 2 + Math.sin(offsetAngle) * offset;
+
+                            // Draw quadratic curve
+                            ctx.quadraticCurveTo(midX, midY, end.x, end.y);
+                        }
+
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                        ctx.globalAlpha = 1;
+
+                        // Draw direction arrows on curved paths
+                        if (phase === 6) {
+                            for (let i = 0; i < route.length - 1; i++) {
+                                const start = route[i];
+                                const end = route[i + 1];
+
+                                // Calculate curve parameters
+                                const dx = end.x - start.x;
+                                const dy = end.y - start.y;
+                                const dist = Math.hypot(dx, dy);
+                                const angle = Math.atan2(dy, dx);
+
+                                const curvature = 0.3;
+                                const offsetAngle = angle + Math.PI / 2;
+                                const variation = Math.sin(idx * 1.5 + i * 0.7) * 0.5 + 0.5;
+                                const offset = dist * curvature * variation;
+
+                                const midX = (start.x + end.x) / 2 + Math.cos(offsetAngle) * offset;
+                                const midY = (start.y + end.y) / 2 + Math.sin(offsetAngle) * offset;
+
+                                // Calculate point at t=0.5 on quadratic curve for arrow placement
+                                const t = 0.5;
+                                const curveX = (1 - t) * (1 - t) * start.x + 2 * (1 - t) * t * midX + t * t * end.x;
+                                const curveY = (1 - t) * (1 - t) * start.y + 2 * (1 - t) * t * midY + t * t * end.y;
+
+                                // Calculate tangent angle at t=0.5
+                                const tangentX = 2 * (1 - t) * (midX - start.x) + 2 * t * (end.x - midX);
+                                const tangentY = 2 * (1 - t) * (midY - start.y) + 2 * t * (end.y - midY);
+                                const tangentAngle = Math.atan2(tangentY, tangentX);
+
+                                // Draw arrow at curve midpoint
+                                ctx.fillStyle = bus.color;
+                                ctx.save();
+                                ctx.translate(curveX, curveY);
+                                ctx.rotate(tangentAngle);
+                                ctx.beginPath();
+                                ctx.moveTo(0, 0);
+                                ctx.lineTo(-12, -6);
+                                ctx.lineTo(-12, 6);
+                                ctx.closePath();
+                                ctx.fill();
+                                ctx.restore();
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Draw buses
+        function drawBuses() {
+            if (phase >= 3) {
+                buses.forEach(bus => {
+                    if (bus.students.length > 0) {
+                        ctx.fillStyle = bus.color;
+                        ctx.shadowBlur = 20;
+                        ctx.shadowColor = bus.color;
+                        ctx.fillRect(bus.x - 8, bus.y - 8, 16, 16);
+                        ctx.shadowBlur = 0;
+                    }
+                });
+            }
+        }
+
+        // Draw algorithm racing visualization
+        function drawAlgoRacing() {
+            if (phase === 4) {
+                const spacing = 80;
+                const startX = 100;
+                const startY = canvas.height - 150;
+
+                algorithms.forEach((algo, idx) => {
+                    const y = startY - idx * spacing;
+                    const progress = algo.progress / 100;
+
+                    // Track
+                    ctx.strokeStyle = COLORS.dimGray;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(startX, y);
+                    ctx.lineTo(startX + 400, y);
+                    ctx.stroke();
+
+                    // Racer
+                    const x = startX + progress * 400;
+                    ctx.fillStyle = COLORS.cyan;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = COLORS.cyan;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                });
+            }
+        }
+
+        // PHASE 1: Understanding the Challenge
+        function updatePhase1() {
+            // Fade in students one by one
+            const studentsPerFrame = 2;
+            const startIdx = Math.floor((animationFrame / 15)) * studentsPerFrame;
+
+            for (let i = startIdx; i < Math.min(startIdx + studentsPerFrame, NUM_STUDENTS); i++) {
+                if (students[i]) {
+                    students[i].alpha = Math.min(1, students[i].alpha + 0.1);
+                }
+            }
+
+            // Update UI
+            const appeared = students.filter(s => s.alpha > 0).length;
+            document.getElementById('studentCount').textContent = appeared;
+            document.getElementById('busCount').textContent = NUM_BUSES;
+            document.getElementById('totalCapacity').textContent = BUS_CAPACITIES.reduce((a, b) => a + b, 0);
+            document.getElementById('unassignedCount').textContent = appeared;
+
+            // Move to next phase
+            if (animationFrame > 150) {
+                phase = 2;
+                animationFrame = 0;
+                document.getElementById('stepNumber').textContent = 'STEP 2: INTELLIGENT GROUPING';
+                document.getElementById('stepDesc').textContent = 'Analyzing geographic distribution and forming optimal clusters based on capacity constraints';
+                document.getElementById('mainProgress').style.width = '40%';
+            }
+        }
+
+        // PHASE 2: Intelligent Grouping (Clustering)
+        function updatePhase2() {
+            if (animationFrame === 1) {
+                // K-means clustering simulation
+                clusters = [];
+                for (let i = 0; i < NUM_BUSES; i++) {
+                    clusters.push({ busId: -1, members: [] });
+                }
+
+                // Simple assignment based on angle from school
+                students.forEach((student, idx) => {
+                    const angle = Math.atan2(student.y - school.y, student.x - school.x);
+                    const normalizedAngle = (angle + Math.PI) / (2 * Math.PI);
+                    const clusterIdx = Math.floor(normalizedAngle * NUM_BUSES) % NUM_BUSES;
+
+                    clusters[clusterIdx].members.push(idx);
+                    student.cluster = clusterIdx;
+                });
+            }
+
+            // Animate clustering
+            const progress = animationFrame / 120;
+            document.getElementById('clusterCount').textContent = Math.min(NUM_BUSES, Math.floor(progress * NUM_BUSES));
+            document.getElementById('clusteringCount').textContent = students.filter(s => s.cluster >= 0).length;
+
+            if (animationFrame > 120) {
+                phase = 3;
+                animationFrame = 0;
+                document.getElementById('stepNumber').textContent = 'STEP 3: SMART ASSIGNMENT';
+                document.getElementById('stepDesc').textContent = 'Assigning clusters to buses to minimize total collective distance';
+                document.getElementById('mainProgress').style.width = '60%';
+                document.getElementById('clusterPanel').style.opacity = '1';
+            }
+        }
+
+        // PHASE 3: Smart Assignment
+        function updatePhase3() {
+            if (animationFrame === 1) {
+                // Assign buses to clusters
+                clusters.forEach((cluster, idx) => {
+                    cluster.busId = idx;
+                    cluster.members.forEach(sid => {
+                        students[sid].assigned = true;
+                        buses[idx].students.push(sid);
+                    });
+                });
+
+                // Update cluster panel
+                const clusterList = document.getElementById('clusterList');
+                clusterList.innerHTML = '';
+                clusters.forEach((cluster, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'cluster-item assigned';
+                    div.innerHTML = `
+                        <div class="cluster-bus">Bus ${idx + 1} (Cap: ${buses[idx].capacity})</div>
+                        <div class="cluster-students">${cluster.members.length} students assigned</div>
+                    `;
+                    clusterList.appendChild(div);
+                });
+            }
+
+            document.getElementById('assignedCount').textContent = students.filter(s => s.assigned).length;
+            document.getElementById('activeBusCount').textContent = buses.filter(b => b.students.length > 0).length;
+            document.getElementById('unassignedCount').textContent = '0';
+            document.getElementById('clusteringCount').textContent = '0';
+
+            if (animationFrame > 90) {
+                phase = 4;
+                animationFrame = 0;
+                document.getElementById('stepNumber').textContent = 'STEP 4: ROUTE OPTIMIZATION';
+                document.getElementById('stepDesc').textContent = 'Running 4 optimization algorithms simultaneously - Christofides, Genetic, Nearest Neighbor, Simulated Annealing';
+                document.getElementById('mainProgress').style.width = '80%';
+                document.getElementById('algoDash').style.opacity = '1';
+
+                // Mark all algorithms as active
+                for (let i = 1; i <= 4; i++) {
+                    document.getElementById(`algo${i}`).classList.add('active');
+                }
+            }
+        }
+
+        // PHASE 4: Route Optimization (Algorithm Racing)
+        function updatePhase4() {
+            // Simulate algorithm progress at different speeds
+            const speeds = [0.8, 1.2, 1.0, 0.9]; // Different algo speeds
+
+            algorithms.forEach((algo, idx) => {
+                algo.progress = Math.min(100, algo.progress + speeds[idx]);
+
+                // Update UI
+                document.getElementById(`a${idx + 1}-progress`).style.width = algo.progress + '%';
+
+                // Generate mock results as algorithms progress
+                if (algo.progress > 50 && algo.distance === 0) {
+                    algo.distance = (180 + Math.random() * 40).toFixed(1);
+                    algo.time = (45 + Math.random() * 15).toFixed(0);
+                    algo.cost = (algo.distance * 8.5).toFixed(0);
+
+                    document.getElementById(`a${idx + 1}-dist`).textContent = algo.distance + ' km';
+                    document.getElementById(`a${idx + 1}-time`).textContent = algo.time + ' min';
+                    document.getElementById(`a${idx + 1}-cost`).textContent = '₹' + algo.cost;
+                }
+            });
+
+            // All algorithms complete
+            if (algorithms.every(a => a.progress >= 100)) {
+                phase = 5;
+                animationFrame = 0;
+                document.getElementById('stepNumber').textContent = 'STEP 5: SELECTING THE WINNER';
+                document.getElementById('stepDesc').textContent = 'Comparing results and selecting the most efficient route';
+                document.getElementById('mainProgress').style.width = '100%';
+
+                // Find winner (lowest distance)
+                winnerIndex = 0;
+                let minDist = parseFloat(algorithms[0].distance);
+                algorithms.forEach((algo, idx) => {
+                    if (parseFloat(algo.distance) < minDist) {
+                        minDist = parseFloat(algo.distance);
+                        winnerIndex = idx;
+                    }
+                });
+            }
+        }
+
+        // PHASE 5: Selecting the Winner
+        function updatePhase5() {
+            if (animationFrame === 30) {
+                // Highlight winner
+                for (let i = 1; i <= 4; i++) {
+                    document.getElementById(`algo${i}`).classList.remove('active');
+                }
+
+                const winnerElem = document.getElementById(`algo${winnerIndex + 1}`);
+                winnerElem.classList.add('winner');
+                winnerElem.innerHTML += '<div class="winner-badge">🏆 WINNER</div>';
+
+                // Generate routes
+                buses.forEach((bus, idx) => {
+                    const route = [school];
+                    bus.students.forEach(sid => {
+                        route.push(students[sid]);
+                    });
+                    route.push(school);
+                    routes.push(route);
+                });
+
+                // Update metrics
+                const winner = algorithms[winnerIndex];
+                document.getElementById('totalDistance').textContent = winner.distance + ' km';
+                document.getElementById('totalDistance').classList.remove('bad');
+                document.getElementById('fuelCost').textContent = '₹' + winner.cost;
+                document.getElementById('fuelCost').classList.remove('bad');
+                document.getElementById('coverage').textContent = '100%';
+                document.getElementById('coverage').classList.remove('warning');
+            }
+
+            if (animationFrame > 90) {
+                phase = 6;
+                animationFrame = 0;
+
+                // Reset bus positions and segment progress
+                buses.forEach(bus => {
+                    bus.x = school.x;
+                    bus.y = school.y;
+                    bus.pathIndex = 0;
+                    bus.segmentProgress = 0;
+                });
+            }
+        }
+
+        // PHASE 6: Execution
+        function updatePhase6() {
+            // Animate buses along curved routes
+            buses.forEach((bus, idx) => {
+                if (routes[idx] && bus.pathIndex < routes[idx].length - 1) {
+                    const start = routes[idx][bus.pathIndex];
+                    const end = routes[idx][bus.pathIndex + 1];
+
+                    // Calculate curve parameters
+                    const dx = end.x - start.x;
+                    const dy = end.y - start.y;
+                    const dist = Math.hypot(dx, dy);
+                    const angle = Math.atan2(dy, dx);
+
+                    const curvature = 0.3;
+                    const offsetAngle = angle + Math.PI / 2;
+                    const variation = Math.sin(idx * 1.5 + bus.pathIndex * 0.7) * 0.5 + 0.5;
+                    const offset = dist * curvature * variation;
+
+                    // Control point for the curve
+                    const ctrlX = (start.x + end.x) / 2 + Math.cos(offsetAngle) * offset;
+                    const ctrlY = (start.y + end.y) / 2 + Math.sin(offsetAngle) * offset;
+
+                    // Initialize progress along current segment if not set
+                    if (bus.segmentProgress === undefined) {
+                        bus.segmentProgress = 0;
+                    }
+
+                    // Move along curve
+                    bus.segmentProgress += 0.03; // Speed of movement
+
+                    if (bus.segmentProgress >= 1) {
+                        // Move to next segment
+                        bus.pathIndex++;
+                        bus.segmentProgress = 0;
+                    } else {
+                        // Calculate position on quadratic bezier curve
+                        const t = bus.segmentProgress;
+                        bus.x = (1 - t) * (1 - t) * start.x + 2 * (1 - t) * t * ctrlX + t * t * end.x;
+                        bus.y = (1 - t) * (1 - t) * start.y + 2 * (1 - t) * t * ctrlY + t * t * end.y;
+                    }
+                }
+            });
+
+            if (animationFrame === 120) {
+                const processingTime = ((Date.now() - startTime) / 1000).toFixed(2);
+                document.getElementById('processingTime').textContent = processingTime + 's';
+
+                // Show results
+                document.getElementById('totalTime').textContent = processingTime;
+                document.getElementById('winnerName').textContent = algorithms[winnerIndex].name.toUpperCase();
+                document.getElementById('resultsCard').classList.add('show');
+            }
+        }
+
+        // Main animation loop
+        function animate() {
+            ctx.fillStyle = COLORS.void;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawGrid();
+            drawClusters();
+            drawRoutes();
+            drawSchool();
+            drawStudents();
+            drawBuses();
+            drawAlgoRacing();
+
+            if (phase === 1) updatePhase1();
+            else if (phase === 2) updatePhase2();
+            else if (phase === 3) updatePhase3();
+            else if (phase === 4) updatePhase4();
+            else if (phase === 5) updatePhase5();
+            else if (phase === 6) updatePhase6();
+
+            if (phase > 0) {
+                animationFrame++;
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                document.getElementById('processingTime').textContent = elapsed + 's';
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Event listeners
+        document.getElementById('runBtn').addEventListener('click', () => {
+            if (phase === 0) {
+                phase = 1;
+                animationFrame = 0;
+                startTime = Date.now();
+                document.getElementById('runBtn').disabled = true;
+                document.getElementById('stepNumber').textContent = 'STEP 1: UNDERSTANDING THE CHALLENGE';
+                document.getElementById('stepDesc').textContent = 'Receiving student locations, bus capacities, and destination coordinates';
+                document.getElementById('mainProgress').style.width = '20%';
+            }
+        });
+
+        document.getElementById('closeResults').addEventListener('click', () => {
+            document.getElementById('resultsCard').classList.remove('show');
+        });
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            school = { x: canvas.width / 2, y: canvas.height / 2, label: 'SCHOOL HQ' };
+        });
+
+        // Initialize
+        initializeStudents();
+        initializeBuses();
+        animate();
+    </script>
+</body>
+
+</html>

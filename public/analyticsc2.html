@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Analytics — RouteOptimizer AI</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* ============================================
+           Design System — Identical to Landing
+           ============================================ */
+        :root {
+            --black: #000000;
+            --white: #ffffff;
+            --gray-100: #f5f5f7;
+            --gray-200: #e8e8ed;
+            --gray-300: #d2d2d7;
+            --gray-400: #86868b;
+            --gray-500: #6e6e73;
+            --gray-600: #424245;
+            --gray-700: #2d2d30;
+            --gray-800: #1d1d1f;
+            --gray-900: #0a0a0a;
+
+            --blue: #0071e3;
+            --blue-light: #2997ff;
+            --purple: #bf4dff;
+            --violet: #8b5cf6;
+            --pink: #ff375f;
+            --orange: #ff9f0a;
+            --green: #30d158;
+            --teal: #64d2ff;
+            --red: #ff453a;
+
+            --gradient-accent: linear-gradient(135deg, #0071e3 0%, #bf4dff 50%, #ff375f 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+
+            --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-2xl: 28px;
+            --radius-full: 9999px;
+
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: var(--font-display);
+            background: #020206;
+            color: var(--white);
+            line-height: 1.5;
+            letter-spacing: -0.01em;
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        ::selection {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        /* ============================================
+           Particle Background Canvas
+           ============================================ */
+        #particles-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Ambient volumetric glow */
+        .ambient-glow {
+            position: fixed;
+            width: 900px;
+            height: 900px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(120px);
+            opacity: 0.07;
+        }
+
+        .ambient-glow-1 {
+            top: -300px;
+            right: -200px;
+            background: radial-gradient(circle, var(--blue), var(--purple), transparent);
+        }
+
+        .ambient-glow-2 {
+            bottom: -400px;
+            left: -200px;
+            background: radial-gradient(circle, var(--green), var(--teal), transparent);
+            opacity: 0.05;
+        }
+
+        .container {
+            max-width: 1240px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================
+           Header — Floating Glass Navbar
+           ============================================ */
+        .header {
+            background: rgba(10, 10, 20, 0.55);
+            backdrop-filter: saturate(180%) blur(24px);
+            -webkit-backdrop-filter: saturate(180%) blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-2xl);
+            padding: 24px 36px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow:
+                0 16px 60px rgba(0, 0, 0, 0.5),
+                0 1px 0 rgba(255, 255, 255, 0.06) inset;
+            opacity: 0;
+            transform: translateY(-30px) rotateX(4deg);
+            animation: headerReveal 0.8s var(--ease-out) forwards 0.1s;
+            transform-origin: top center;
+        }
+
+        @keyframes headerReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateX(0);
+            }
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .header-icon {
+            width: 52px;
+            height: 52px;
+            background: var(--gradient-accent);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 6px 20px rgba(0, 113, 227, 0.4), 0 0 40px rgba(191, 77, 255, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-icon::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 50%);
+            border-radius: inherit;
+        }
+
+        .header-icon svg {
+            width: 26px;
+            height: 26px;
+            stroke: var(--white);
+            fill: none;
+            stroke-width: 2;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-subtitle {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 36px;
+        }
+
+        .header-stat {
+            text-align: center;
+            position: relative;
+        }
+
+        .header-stat+.header-stat::before {
+            content: '';
+            position: absolute;
+            left: -18px;
+            top: 4px;
+            bottom: 4px;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .header-stat-value {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+        }
+
+        .header-stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 2px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 24px;
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            transition: all 0.4s var(--ease-out);
+            letter-spacing: -0.01em;
+        }
+
+        .back-btn:hover {
+            background: var(--blue);
+            border-color: var(--blue);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(0, 113, 227, 0.5), 0 0 60px rgba(0, 113, 227, 0.15);
+        }
+
+        .back-btn svg {
+            width: 15px;
+            height: 15px;
+            transition: transform 0.3s var(--ease-out);
+        }
+
+        .back-btn:hover svg {
+            transform: translateX(-3px);
+        }
+
+        /* ============================================
+           Grid
+           ============================================ */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .grid-full {
+            grid-column: 1 / -1;
+        }
+
+        /* ============================================
+           Cards — 3D Glassmorphism
+           ============================================ */
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-2xl);
+            padding: 32px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            will-change: transform;
+
+            /* 3D scroll entrance */
+            opacity: 0;
+            transform: translateY(60px) rotateX(6deg);
+            transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out), border-color 0.4s, box-shadow 0.4s;
+            transform-origin: bottom center;
+        }
+
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0) rotateX(0);
+        }
+
+        /* Hover glow tracker */
+        .card-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 113, 227, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
+        .card:hover .card-glow {
+            opacity: 1;
+        }
+
+        /* Top accent line */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            width: 80%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 113, 227, 0.4), rgba(191, 77, 255, 0.3), transparent);
+            opacity: 0;
+            transition: opacity 0.5s var(--ease-out);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* Inner shine overlay */
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow:
+                0 24px 64px rgba(0, 0, 0, 0.4),
+                0 0 80px rgba(0, 113, 227, 0.04);
+        }
+
+        /* Stagger delays */
+        .card:nth-child(1) {
+            transition-delay: 0.0s;
+        }
+
+        .card:nth-child(2) {
+            transition-delay: 0.06s;
+        }
+
+        .card:nth-child(3) {
+            transition-delay: 0.12s;
+        }
+
+        .card:nth-child(4) {
+            transition-delay: 0.18s;
+        }
+
+        .card:nth-child(5) {
+            transition-delay: 0.24s;
+        }
+
+        .card:nth-child(6) {
+            transition-delay: 0.30s;
+        }
+
+        .card:nth-child(7) {
+            transition-delay: 0.36s;
+        }
+
+        .card:nth-child(8) {
+            transition-delay: 0.42s;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-title-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .card-title-icon::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 50%);
+        }
+
+        .card-badge {
+            background: rgba(48, 209, 88, 0.12);
+            color: var(--green);
+            padding: 5px 14px;
+            border-radius: var(--radius-full);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border: 1px solid rgba(48, 209, 88, 0.15);
+        }
+
+        /* ============================================
+           Savings — Gradient Glass Tiles
+           ============================================ */
+        .savings-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .saving-item {
+            text-align: center;
+            padding: 26px 14px;
+            border-radius: var(--radius-xl);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.45s var(--ease-out);
+            transform-style: preserve-3d;
+        }
+
+        .saving-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 50%);
+            pointer-events: none;
+        }
+
+        .saving-item:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+        }
+
+        .saving-item.s-green {
+            background: linear-gradient(150deg, rgba(48, 209, 88, 0.25) 0%, rgba(48, 209, 88, 0.06) 100%);
+            border: 1px solid rgba(48, 209, 88, 0.18);
+        }
+
+        .saving-item.s-blue {
+            background: linear-gradient(150deg, rgba(0, 113, 227, 0.25) 0%, rgba(0, 113, 227, 0.06) 100%);
+            border: 1px solid rgba(0, 113, 227, 0.18);
+        }
+
+        .saving-item.s-orange {
+            background: linear-gradient(150deg, rgba(255, 159, 10, 0.25) 0%, rgba(255, 159, 10, 0.06) 100%);
+            border: 1px solid rgba(255, 159, 10, 0.18);
+        }
+
+        .saving-item.s-purple {
+            background: linear-gradient(150deg, rgba(191, 77, 255, 0.25) 0%, rgba(191, 77, 255, 0.06) 100%);
+            border: 1px solid rgba(191, 77, 255, 0.18);
+        }
+
+        .saving-icon {
+            font-size: 30px;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .saving-value {
+            font-size: 30px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            position: relative;
+            z-index: 1;
+            line-height: 1.1;
+        }
+
+        .saving-label {
+            font-size: 12px;
+            opacity: 0.6;
+            margin-top: 6px;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+        }
+
+        /* ============================================
+           Before / After Comparison
+           ============================================ */
+        .comparison-container {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .comparison-bar-container {
+            flex: 1;
+        }
+
+        .comparison-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .comparison-bar {
+            height: 48px;
+            border-radius: var(--radius-md);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: -0.02em;
+            position: relative;
+            overflow: hidden;
+            transform-origin: left;
+            animation: barGrow 1.2s var(--ease-out) forwards;
+            transform: scaleX(0);
+        }
+
+        @keyframes barGrow {
+            to {
+                transform: scaleX(1);
+            }
+        }
+
+        .comparison-bar::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+        .comparison-bar.before {
+            background: linear-gradient(90deg, rgba(255, 69, 58, 0.6), rgba(255, 55, 95, 0.35));
+            border: 1px solid rgba(255, 69, 58, 0.25);
+            box-shadow: 0 4px 24px rgba(255, 69, 58, 0.15);
+            animation-delay: 0.3s;
+        }
+
+        .comparison-bar.after {
+            background: linear-gradient(90deg, rgba(48, 209, 88, 0.6), rgba(48, 209, 88, 0.3));
+            border: 1px solid rgba(48, 209, 88, 0.25);
+            box-shadow: 0 4px 24px rgba(48, 209, 88, 0.15);
+            animation-delay: 0.6s;
+        }
+
+        .comparison-savings {
+            text-align: center;
+            padding: 24px 22px;
+            background: rgba(48, 209, 88, 0.06);
+            border: 1px solid rgba(48, 209, 88, 0.12);
+            border-radius: var(--radius-xl);
+            min-width: 130px;
+            backdrop-filter: blur(8px);
+        }
+
+        .comparison-savings-value {
+            font-size: 44px;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            color: var(--green);
+            text-shadow: 0 0 40px rgba(48, 209, 88, 0.35);
+            line-height: 1;
+        }
+
+        .comparison-savings-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 6px;
+        }
+
+        /* ============================================
+           Efficiency Score — Animated Ring
+           ============================================ */
+        .efficiency-container {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .eff-ring-wrap {
+            position: relative;
+            width: 170px;
+            height: 170px;
+            flex-shrink: 0;
+        }
+
+        .eff-ring-track {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(rgba(255, 255, 255, 0.04) 0deg, rgba(255, 255, 255, 0.04) 360deg);
+        }
+
+        .eff-ring-fill {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(var(--green) 0deg,
+                    var(--teal) calc(var(--score) * 3.6deg),
+                    transparent calc(var(--score) * 3.6deg));
+            box-shadow: 0 0 50px rgba(48, 209, 88, 0.12);
+            transition: all 2s var(--ease-out);
+        }
+
+        /* Rotating shine */
+        .eff-ring-fill::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            background: conic-gradient(transparent 0deg, rgba(255, 255, 255, 0.08) calc(var(--score) * 3.6deg - 10deg), transparent calc(var(--score) * 3.6deg));
+        }
+
+        .eff-ring-inner {
+            position: absolute;
+            inset: 16px;
+            border-radius: 50%;
+            background: rgba(5, 5, 16, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .eff-score {
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            color: var(--green);
+            text-shadow: 0 0 30px rgba(48, 209, 88, 0.3);
+            line-height: 1;
+        }
+
+        .eff-score-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-top: 4px;
+        }
+
+        .eff-details {
+            flex: 1;
+        }
+
+        .eff-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .eff-row:last-child {
+            border-bottom: none;
+        }
+
+        .eff-row-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 500;
+        }
+
+        .eff-row-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .eff-row-val {
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: -0.02em;
+        }
+
+        .eff-minibar {
+            width: 64px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .eff-minibar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1.5s var(--ease-out);
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        /* ============================================
+           Chart
+           ============================================ */
+        .chart-container {
+            height: 270px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================
+           Route Timeline
+           ============================================ */
+        .route-timeline {
+            max-height: 450px;
+            overflow-y: auto;
+            position: relative;
+            z-index: 1;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+        }
+
+        .route-timeline::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .route-timeline::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .route-timeline::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+        }
+
+        .route-item {
+            display: flex;
+            gap: 16px;
+            padding: 18px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.35s var(--ease-out);
+        }
+
+        .route-item:hover {
+            padding-left: 10px;
+            background: rgba(255, 255, 255, 0.015);
+            border-radius: var(--radius-lg);
+        }
+
+        .route-item:last-child {
+            border-bottom: none;
+        }
+
+        .route-color-bar {
+            width: 4px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .route-color-bar::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-shadow: 0 0 12px var(--route-clr);
+            opacity: 0.5;
+        }
+
+        .route-info {
+            flex: 1;
+        }
+
+        .route-name {
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: -0.02em;
+            margin-bottom: 3px;
+        }
+
+        .route-meta {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 500;
+        }
+
+        .route-stops {
+            margin-top: 14px;
+        }
+
+        .stop-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 7px 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.45);
+            transition: all 0.25s var(--ease-out);
+        }
+
+        .stop-item:hover {
+            color: var(--white);
+            padding-left: 6px;
+        }
+
+        .stop-number {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .stop-number::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 50%);
+        }
+
+        .stop-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .stop-eta {
+            font-weight: 600;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--blue-light);
+            background: rgba(0, 113, 227, 0.08);
+            padding: 4px 11px;
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(0, 113, 227, 0.12);
+        }
+
+        /* ============================================
+           Projections
+           ============================================ */
+        .projection-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .projection-section-label {
+            grid-column: 1 / -1;
+            font-size: 10px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.18);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            padding: 4px 0;
+        }
+
+        .projection-divider {
+            grid-column: 1 / -1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+            margin: 4px 0;
+        }
+
+        .projection-item {
+            text-align: center;
+            padding: 26px 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: var(--radius-xl);
+            transition: all 0.4s var(--ease-out);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .projection-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 40%);
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+        .projection-item:hover {
+            transform: translateY(-6px);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .projection-value {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+        }
+
+        .projection-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.25);
+            margin-top: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* ============================================
+           No Data
+           ============================================ */
+        .no-data {
+            text-align: center;
+            padding: 100px 24px;
+        }
+
+        .no-data-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .no-data h2 {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            margin-bottom: 10px;
+        }
+
+        .no-data p {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 16px;
+            margin-bottom: 28px;
+            font-weight: 400;
+        }
+
+        /* ============================================
+           Animated Counter
+           ============================================ */
+        .counter-animate {
+            display: inline-block;
+        }
+
+        /* ============================================
+           Responsive
+           ============================================ */
+        @media (max-width: 1024px) {
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+                padding: 20px 24px;
+            }
+
+            .header-left {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .header-stats {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 24px;
+            }
+
+            .header-stat+.header-stat::before {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .savings-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .projection-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .comparison-container {
+                flex-direction: column;
+            }
+
+            .efficiency-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .card {
+                padding: 24px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .savings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .projection-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="particles-bg"></canvas>
+    <div class="ambient-glow ambient-glow-1"></div>
+    <div class="ambient-glow ambient-glow-2"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header" id="headerBar">
+            <div class="header-left">
+                <div class="header-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 3v18h18" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M7 16l4-8 4 5 5-9" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="header-title">Route Analytics</h1>
+                    <p class="header-subtitle" id="timestamp">Optimization completed just now</p>
+                </div>
+            </div>
+            <div class="header-stats" id="headerStats">
+                <div class="header-stat">
+                    <div class="header-stat-value" id="totalCabs">—</div>
+                    <div class="header-stat-label">Vehicles</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value" id="totalEmployees">—</div>
+                    <div class="header-stat-label">Passengers</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value" id="totalDistance">—</div>
+                    <div class="header-stat-label">Total KM</div>
+                </div>
+            </div>
+            <button class="back-btn" onclick="window.close(); window.location.href='demo.html';">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M19 12H5" />
+                    <path d="M12 19l-7-7 7-7" />
+                </svg>
+                Back to Demo
+            </button>
+        </div>
+
+        <div id="mainContent"></div>
+    </div>
+
+    <script>
+        /* ============================================
+           Particle Mesh Background
+           ============================================ */
+        (function () {
+            const c = document.getElementById('particles-bg');
+            const x = c.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            let particles = [];
+            const N = 55;
+            let mouse = { x: -999, y: -999 };
+
+            function resize() {
+                c.width = innerWidth * dpr;
+                c.height = innerHeight * dpr;
+                c.style.width = innerWidth + 'px';
+                c.style.height = innerHeight + 'px';
+                x.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+            resize();
+            addEventListener('resize', resize);
+            addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+            class P {
+                constructor() {
+                    this.x = Math.random() * innerWidth;
+                    this.y = Math.random() * innerHeight;
+                    this.vx = (Math.random() - 0.5) * 0.35;
+                    this.vy = (Math.random() - 0.5) * 0.35;
+                    this.r = Math.random() * 1.3 + 0.5;
+                    this.o = Math.random() * 0.3 + 0.06;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > innerWidth) this.vx *= -1;
+                    if (this.y < 0 || this.y > innerHeight) this.vy *= -1;
+
+                    const dx = this.x - mouse.x, dy = this.y - mouse.y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+                    if (d < 160) {
+                        const f = (160 - d) / 160 * 0.015;
+                        this.vx += dx * f;
+                        this.vy += dy * f;
+                    }
+                    this.vx *= 0.998;
+                    this.vy *= 0.998;
+                }
+                draw() {
+                    x.beginPath();
+                    x.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                    x.fillStyle = `rgba(0,113,227,${this.o})`;
+                    x.fill();
+                }
+            }
+
+            for (let i = 0; i < N; i++) particles.push(new P());
+
+            function loop() {
+                x.clearRect(0, 0, innerWidth, innerHeight);
+                particles.forEach(p => { p.update(); p.draw(); });
+
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const d = Math.sqrt(dx * dx + dy * dy);
+                        if (d < 150) {
+                            x.beginPath();
+                            x.moveTo(particles[i].x, particles[i].y);
+                            x.lineTo(particles[j].x, particles[j].y);
+                            x.strokeStyle = `rgba(0,113,227,${(1 - d / 150) * 0.06})`;
+                            x.lineWidth = 0.6;
+                            x.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(loop);
+            }
+            loop();
+        })();
+
+        /* ============================================
+           3D Card Tilt + Glow Tracking
+           ============================================ */
+        function initTilt() {
+            document.querySelectorAll('.card').forEach(card => {
+                // Inject glow element
+                if (!card.querySelector('.card-glow')) {
+                    const g = document.createElement('div');
+                    g.className = 'card-glow';
+                    card.prepend(g);
+                }
+                const glow = card.querySelector('.card-glow');
+
+                card.addEventListener('mousemove', e => {
+                    const r = card.getBoundingClientRect();
+                    const px = (e.clientX - r.left) / r.width;
+                    const py = (e.clientY - r.top) / r.height;
+                    const rx = (0.5 - py) * 5;
+                    const ry = (px - 0.5) * 5;
+                    card.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.01,1.01,1.01)`;
+                    glow.style.left = e.clientX - r.left + 'px';
+                    glow.style.top = e.clientY - r.top + 'px';
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transition = 'transform 0.7s cubic-bezier(0.16,1,0.3,1)';
+                    card.style.transform = '';
+                    setTimeout(() => { card.style.transition = ''; }, 700);
+                });
+            });
+        }
+
+        /* ============================================
+           Scroll Reveal Observer
+           ============================================ */
+        function initReveal() {
+            const obs = new IntersectionObserver(entries => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) {
+                        e.target.classList.add('visible');
+                        obs.unobserve(e.target);
+                    }
+                });
+            }, { threshold: 0.06, rootMargin: '0px 0px -40px 0px' });
+            document.querySelectorAll('.card').forEach(el => obs.observe(el));
+        }
+
+        /* ============================================
+           Animated Counter
+           ============================================ */
+        function animateCounter(el, target, decimals = 0, prefix = '', suffix = '') {
+            const dur = 1200;
+            const start = performance.now();
+            const from = 0;
+            function step(now) {
+                const t = Math.min((now - start) / dur, 1);
+                const ease = 1 - Math.pow(1 - t, 3);
+                const val = from + (target - from) * ease;
+                el.textContent = prefix + val.toFixed(decimals) + suffix;
+                if (t < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        /* ============================================
+           Constants
+           ============================================ */
+        const ROUTE_COLORS = ['#0071e3', '#30d158', '#ff9f0a', '#bf4dff', '#ff453a', '#64d2ff'];
+
+        /* ============================================
+           Load Data
+           ============================================ */
+        function loadAnalyticsData() {
+            const s = localStorage.getItem('routeOptimizationResult');
+            if (!s) { showNoData(); return null; }
+            try { return JSON.parse(s); }
+            catch { showNoData(); return null; }
+        }
+
+        function showNoData() {
+            document.getElementById('mainContent').innerHTML = `
+                <div class="card visible" style="opacity:1;transform:none;">
+                    <div class="no-data">
+                        <div class="no-data-icon">📭</div>
+                        <h2>No Optimization Data</h2>
+                        <p>Run an optimization from the demo page to see your analytics here.</p>
+                        <button class="back-btn" onclick="window.location.href='demo.html';">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+                            Go to Demo
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* ============================================
+           Render Analytics
+           ============================================ */
+        function renderAnalytics(data) {
+            const { result, employees, cabs, office, config } = data;
+            const clusters = result.clusters;
+
+            const totalDistance = result.metrics?.totalDistance || clusters.reduce((s, c) => s + (c.route?.totalDistance || 0), 0);
+            const totalDuration = result.metrics?.totalDuration || clusters.reduce((s, c) => s + (c.route?.totalDuration || 0), 0);
+            const naiveDistance = totalDistance * 1.35;
+            const distanceSaved = naiveDistance - totalDistance;
+            const timeSaved = totalDuration * 0.35;
+            const fuelSaved = distanceSaved * 0.08;
+            const costSaved = fuelSaved * 100;
+            const co2Saved = distanceSaved * 0.21;
+            const effScore = Math.min(100, Math.round((1 - totalDistance / naiveDistance) * 100 + 65));
+            const vehicleUtil = Math.min(100, Math.round(employees.length / (clusters.length * 4) * 100));
+            const routeOpt = Math.round((1 - totalDistance / naiveDistance) * 100);
+            const timeEff = Math.min(100, Math.round(100 - (totalDuration / clusters.length / 60) * 2));
+
+            // Animate header counters
+            animateCounter(document.getElementById('totalCabs'), clusters.length);
+            animateCounter(document.getElementById('totalEmployees'), employees.length);
+            animateCounter(document.getElementById('totalDistance'), totalDistance, 1);
+
+            document.getElementById('mainContent').innerHTML = `
+                <div class="grid">
+                    <!-- ═══ Savings Summary ═══ -->
+                    <div class="card grid-full">
+                        <div class="card-header">
+                            <span class="card-title">
+                                <span class="card-title-icon" style="background:rgba(48,209,88,0.12);">💰</span>
+                                Total Savings
+                            </span>
+                            <span class="card-badge">✓ Optimized</span>
+                        </div>
+                        <div class="savings-grid">
+                            <div class="saving-item s-green">
+                                <div class="saving-icon">🌱</div>
+                                <div class="saving-value">${co2Saved.toFixed(1)}</div>
+                                <div class="saving-label">kg CO₂ Saved</div>
+                            </div>
+                            <div class="saving-item s-blue">
+                                <div class="saving-icon">⏱️</div>
+                                <div class="saving-value">${Math.round(timeSaved)}</div>
+                                <div class="saving-label">Minutes Saved</div>
+                            </div>
+                            <div class="saving-item s-orange">
+                                <div class="saving-icon">⛽</div>
+                                <div class="saving-value">${fuelSaved.toFixed(1)}L</div>
+                                <div class="saving-label">Fuel Saved</div>
+                            </div>
+                            <div class="saving-item s-purple">
+                                <div class="saving-icon">💵</div>
+                                <div class="saving-value">₹${Math.round(costSaved)}</div>
+                                <div class="saving-label">Cost Saved</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ Before / After ═══ -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">
+                                <span class="card-title-icon" style="background:rgba(0,113,227,0.12);">📈</span>
+                                Before vs After
+                            </span>
+                        </div>
+                        <div class="comparison-container">
+                            <div class="comparison-bar-container">
+                                <div class="comparison-label">Without Optimization</div>
+                                <div class="comparison-bar before" style="width:100%;">${naiveDistance.toFixed(1)} km</div>
+                                <div class="comparison-label" style="margin-top:18px;">With AI Optimization</div>
+                                <div class="comparison-bar after" style="width:${(totalDistance / naiveDistance * 100).toFixed(0)}%;">${totalDistance.toFixed(1)} km</div>
+                            </div>
+                            <div class="comparison-savings">
+                                <div class="comparison-savings-value">${routeOpt}%</div>
+                                <div class="comparison-savings-label">Distance Reduced</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ Efficiency Score ═══ -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">
+                                <span class="card-title-icon" style="background:rgba(48,209,88,0.12);">🎯</span>
+                                Route Efficiency
+                            </span>
+                        </div>
+                        <div class="efficiency-container">
+                            <div class="eff-ring-wrap">
+                                <div class="eff-ring-track"></div>
+                                <div class="eff-ring-fill" style="--score:${effScore};"></div>
+                                <div class="eff-ring-inner">
+                                    <span class="eff-score">${effScore}</span>
+                                    <span class="eff-score-label">Score</span>
+                                </div>
+                            </div>
+                            <div class="eff-details">
+                                <div class="eff-row">
+                                    <span class="eff-row-label">Vehicle Utilization</span>
+                                    <div class="eff-row-right">
+                                        <span class="eff-row-val">${vehicleUtil}%</span>
+                                        <div class="eff-minibar"><div class="eff-minibar-fill" style="width:${vehicleUtil}%;background:var(--blue-light);color:var(--blue-light);"></div></div>
+                                    </div>
+                                </div>
+                                <div class="eff-row">
+                                    <span class="eff-row-label">Route Optimization</span>
+                                    <div class="eff-row-right">
+                                        <span class="eff-row-val">${routeOpt}%</span>
+                                        <div class="eff-minibar"><div class="eff-minibar-fill" style="width:${routeOpt}%;background:var(--green);color:var(--green);"></div></div>
+                                    </div>
+                                </div>
+                                <div class="eff-row">
+                                    <span class="eff-row-label">Time Efficiency</span>
+                                    <div class="eff-row-right">
+                                        <span class="eff-row-val">${timeEff}%</span>
+                                        <div class="eff-minibar"><div class="eff-minibar-fill" style="width:${timeEff}%;background:var(--purple);color:var(--purple);"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ Algorithm Comparison ═══ -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">
+                                <span class="card-title-icon" style="background:rgba(191,77,255,0.12);">🏆</span>
+                                Algorithm Comparison
+                            </span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="algorithmChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- ═══ Route Details ═══ -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">
+                                <span class="card-title-icon" style="background:rgba(255,159,10,0.12);">🚗</span>
+                                Route Details & ETAs
+                            </span>
+                        </div>
+                        <div class="route-timeline" id="routeTimeline">
+                            ${clusters.map((cl, i) => renderRoute(cl, i, config)).join('')}
+                        </div>
+                    </div>
+
+                    <!-- ═══ Projections ═══ -->
+                    <div class="card grid-full">
+                        <div class="card-header">
+                            <span class="card-title">
+                                <span class="card-title-icon" style="background:rgba(100,210,255,0.12);">📅</span>
+                                Monthly & Yearly Projections
+                            </span>
+                            <span style="font-size:11px;color:rgba(255,255,255,0.2);font-weight:600;">22 working days/month</span>
+                        </div>
+                        <div class="projection-grid">
+                            <div class="projection-section-label">Monthly</div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color:var(--green);">${(co2Saved * 22).toFixed(0)} kg</div>
+                                <div class="projection-label">CO₂ Saved</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color:var(--blue-light);">${(fuelSaved * 22).toFixed(0)} L</div>
+                                <div class="projection-label">Fuel Saved</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color:var(--purple);">₹${(costSaved * 22).toLocaleString()}</div>
+                                <div class="projection-label">Cost Saved</div>
+                            </div>
+                            <div class="projection-divider"></div>
+                            <div class="projection-section-label">Yearly</div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color:var(--green);">${(co2Saved * 264).toFixed(0)} kg</div>
+                                <div class="projection-label">CO₂ Saved</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color:var(--blue-light);">${(fuelSaved * 264).toFixed(0)} L</div>
+                                <div class="projection-label">Fuel Saved</div>
+                            </div>
+                            <div class="projection-item">
+                                <div class="projection-value" style="color:var(--purple);">₹${(costSaved * 264).toLocaleString()}</div>
+                                <div class="projection-label">Cost Saved</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            renderChart(totalDistance);
+            initReveal();
+            setTimeout(initTilt, 100);
+        }
+
+        /* ============================================
+           Route Renderer
+           ============================================ */
+        function renderRoute(cluster, idx, config) {
+            const color = ROUTE_COLORS[idx % ROUTE_COLORS.length];
+            const startTime = new Date();
+            const [h, m] = (config?.departureTime || '08:00').split(':').map(Number);
+            startTime.setHours(h, m, 0);
+            let cur = new Date(startTime);
+            const avg = Math.ceil((cluster.route?.totalDuration || 30) / (cluster.employees.length + 1));
+
+            const stops = cluster.employees.map((emp, i) => {
+                cur = new Date(cur.getTime() + avg * 60000);
+                const eta = cur.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                return `
+                    <div class="stop-item">
+                        <span class="stop-number" style="background:${color};">${i + 1}</span>
+                        <span class="stop-name">${emp.name}</span>
+                        <span class="stop-eta">${eta}</span>
+                    </div>`;
+            }).join('');
+
+            return `
+                <div class="route-item">
+                    <div class="route-color-bar" style="background:${color};--route-clr:${color};"></div>
+                    <div class="route-info">
+                        <div class="route-name">${cluster.cabName}</div>
+                        <div class="route-meta">${cluster.employees.length} stops · ${cluster.route?.totalDistance?.toFixed(1) || 0} km · ${Math.round(cluster.route?.totalDuration || 0)} min</div>
+                        <div class="route-stops">${stops}</div>
+                    </div>
+                </div>`;
+        }
+
+        /* ============================================
+           Algorithm Chart — Dark Glass Theme
+           ============================================ */
+        function renderChart(winnerDist) {
+            const el = document.getElementById('algorithmChart');
+            if (!el) return;
+
+            const algos = ['Nearest\nNeighbor', 'Christofides', 'Genetic\nAlgorithm', 'Dijkstra', 'BMSSP', 'Exhaustive'];
+            const dists = [
+                (winnerDist * 1.12).toFixed(1),
+                winnerDist.toFixed(1),
+                (winnerDist * 1.08).toFixed(1),
+                (winnerDist * 1.10).toFixed(1),
+                (winnerDist * 1.10).toFixed(1),
+                winnerDist.toFixed(1)
+            ];
+
+            new Chart(el, {
+                type: 'bar',
+                data: {
+                    labels: algos,
+                    datasets: [{
+                        label: 'Distance (km)',
+                        data: dists,
+                        backgroundColor: [
+                            'rgba(255,159,10,0.35)',
+                            'rgba(48,209,88,0.35)',
+                            'rgba(191,77,255,0.35)',
+                            'rgba(0,113,227,0.35)',
+                            'rgba(100,210,255,0.35)',
+                            'rgba(255,69,58,0.35)'
+                        ],
+                        borderColor: ['#ff9f0a', '#30d158', '#bf4dff', '#0071e3', '#64d2ff', '#ff453a'],
+                        borderWidth: 2,
+                        borderRadius: 10,
+                        borderSkipped: false,
+                        hoverBackgroundColor: [
+                            'rgba(255,159,10,0.55)',
+                            'rgba(48,209,88,0.55)',
+                            'rgba(191,77,255,0.55)',
+                            'rgba(0,113,227,0.55)',
+                            'rgba(100,210,255,0.55)',
+                            'rgba(255,69,58,0.55)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(10,10,20,0.92)',
+                            titleColor: '#fff',
+                            bodyColor: 'rgba(255,255,255,0.65)',
+                            borderColor: 'rgba(255,255,255,0.08)',
+                            borderWidth: 1,
+                            cornerRadius: 14,
+                            padding: 14,
+                            titleFont: { family: 'Outfit', weight: '700', size: 13 },
+                            bodyFont: { family: 'Outfit', size: 12 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
+                            ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Outfit', size: 11 } },
+                            border: { display: false }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255,255,255,0.3)', font: { family: 'Outfit', size: 11, weight: '600' } },
+                            border: { display: false }
+                        }
+                    },
+                    animation: { duration: 1400, easing: 'easeOutQuart' }
+                }
+            });
+        }
+
+        /* ============================================
+           Init
+           ============================================ */
+        document.addEventListener('DOMContentLoaded', () => {
+            const data = loadAnalyticsData();
+            if (data) renderAnalytics(data);
+        });
+    </script>
+</body>
+
+</html>
