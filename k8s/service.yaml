@@ -1,0 +1,51 @@
+# ============================================================================
+# AI Transport Optimizer - Kubernetes Service
+# ============================================================================
+# ClusterIP service for internal load balancing
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: route-optimizer
+  labels:
+    app: route-optimizer
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app: route-optimizer
+
+---
+# ============================================================================
+# Optional: Ingress for external access
+# ============================================================================
+# Uncomment and configure for your ingress controller (nginx, traefik, etc.)
+
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: route-optimizer-ingress
+#   annotations:
+#     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+#     nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+# spec:
+#   ingressClassName: nginx
+#   rules:
+#     - host: optimizer.yourdomain.com
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: route-optimizer
+#                 port:
+#                   number: 80
+#   tls:
+#     - hosts:
+#         - optimizer.yourdomain.com
+#       secretName: optimizer-tls
