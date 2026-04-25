@@ -4,7 +4,7 @@
 
 When you clicked the "Upgrade" button, the checkout API returned a 500 error with the message:
 ```
-Failed to create checkout session
+Failed to create checkout session.
 ```
 
 **Root Cause:** All Stripe environment variables are **NOT SET**. The server cannot create a checkout session without valid Stripe credentials.
