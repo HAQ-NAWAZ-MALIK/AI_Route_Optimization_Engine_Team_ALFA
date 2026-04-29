@@ -22,6 +22,36 @@ import {
 
 const app = express();
 
+type ToolResultContent = {
+    type?: string;
+    text?: string;
+};
+
+function parseToolResult(result: unknown): unknown {
+    if (!result || typeof result !== 'object' || !('content' in result)) {
+        return result;
+    }
+
+    const content = (result as { content?: ToolResultContent[] }).content;
+    const textContent = content?.find(contentItem => contentItem.type === 'text')?.text;
+
+    if (!textContent) {
+        return result;
+    }
+
+    try {
+        return JSON.parse(textContent);
+    } catch {
+        return textContent;
+    }
+}
+
+function assertJsonRpcObject(value: unknown): asserts value is Record<string, unknown> {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        throw new MCPError(ErrorCode.InvalidParams, 'JSON-RPC params must be an object');
+    }
+}
+
 /**
  * Middleware: JSON body parser
  */
@@ -31,11 +61,12 @@ app.use(express.json({ limit: '10mb' }));
  * Middleware: CORS
  */
 if (config.http.enableCors) {
+    const hasExplicitOrigins = config.http.corsOrigins.length > 0;
     const corsOptions = {
-        origin: config.http.corsOrigins.length > 0
+        origin: hasExplicitOrigins
             ? config.http.corsOrigins
             : '*',
-        credentials: true,
+        credentials: hasExplicitOrigins,
     };
     app.use(cors(corsOptions));
     logger.info('CORS enabled', { origins: corsOptions.origin });
@@ -67,7 +98,7 @@ function authenticate(req: Request, res: Response, next: NextFunction) {
         return next(); // Auth disabled
     }
 
-    const apiKey = req.headers['x-api-key'] as string;
+    const apiKey = req.header('x-api-key');
 
     if (!apiKey) {
         return res.status(401).json({
@@ -181,13 +212,9 @@ app.post('/api/tools/:toolName', authenticate, async (req, res) => {
                 );
         }
 
-        // Extract text content from MCP response format
-        const textContent = result.content.find((c: any) => c.type === 'text')?.text;
-        const parsedResult = textContent ? JSON.parse(textContent) : result;
-
         res.json({
             requestId,
-            result: parsedResult,
+            result: parseToolResult(result),
         });
 
     } catch (error) {
@@ -236,7 +263,14 @@ app.post('/mcp', authenticate, async (req, res) => {
                 break;
 
             case 'tools/call':
-                const { name, arguments: args } = params;
+                assertJsonRpcObject(params);
+
+                if (typeof params.name !== 'string') {
+                    throw new MCPError(ErrorCode.InvalidParams, 'tools/call params.name must be a string');
+                }
+
+                const { name } = params;
+                const args = params.arguments ?? {};
 
                 switch (name) {
                     case 'optimize_route':

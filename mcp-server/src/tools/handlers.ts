@@ -3,7 +3,6 @@
  * These handlers wrap the AI engine functions with proper error handling
  */
 
-import type { CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { logger } from '../logger.js';
 import { config } from '../config.js';
 import { MCPError, ErrorCode } from '../errors.js';
@@ -37,6 +36,34 @@ type OptimizationInput = {
     };
 };
 
+type ToolArgs = Record<string, any>;
+
+function requireObject(value: unknown, fieldName: string): ToolArgs {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        throw new MCPError(ErrorCode.InvalidParams, `${fieldName} must be an object`);
+    }
+
+    return value as ToolArgs;
+}
+
+function requireArray(value: unknown, fieldName: string): any[] {
+    if (!Array.isArray(value)) {
+        throw new MCPError(ErrorCode.InvalidParams, `${fieldName} must be an array`);
+    }
+
+    return value;
+}
+
+function requireCoordinate(value: unknown, fieldName: string): ToolArgs {
+    const coordinate = requireObject(value, fieldName);
+
+    if (typeof coordinate.lat !== 'number' || typeof coordinate.lng !== 'number') {
+        throw new MCPError(ErrorCode.InvalidParams, `${fieldName}.lat and ${fieldName}.lng must be numbers`);
+    }
+
+    return coordinate;
+}
+
 /**
  * Handle optimize_route tool call
  */
@@ -44,49 +71,71 @@ export async function handleOptimizeRoute(args: any, requestId: string): Promise
     const startTime = Date.now();
 
     try {
+        const input = requireObject(args, 'arguments');
+        const origin = requireCoordinate(input.origin, 'origin');
+        const destinations = requireArray(input.destinations, 'destinations');
+        const constraints = requireObject(input.constraints, 'constraints');
+        const options = input.options === undefined ? {} : requireObject(input.options, 'options');
+
+        if (destinations.length === 0) {
+            throw new MCPError(ErrorCode.InvalidParams, 'destinations must contain at least one location');
+        }
+
+        if (typeof constraints.departureTime !== 'string') {
+            throw new MCPError(ErrorCode.InvalidParams, 'constraints.departureTime must be a string');
+        }
+
+        if (input.tripType !== 'pickup' && input.tripType !== 'drop') {
+            throw new MCPError(ErrorCode.InvalidParams, 'tripType must be either "pickup" or "drop"');
+        }
+
         // Validate input limits
-        if (args.destinations.length > config.optimization.maxLocations) {
+        if (destinations.length > config.optimization.maxLocations) {
             throw new MCPError(
                 ErrorCode.InvalidParams,
                 `Too many locations. Maximum allowed: ${config.optimization.maxLocations}`
             );
         }
 
-        logger.toolCall('optimize_route', { locationCount: args.destinations.length }, requestId);
+        logger.toolCall('optimize_route', { locationCount: destinations.length }, requestId);
 
         // Check if auto mode is requested (default behavior)
-        const isAutoMode = !args.options?.algorithm || args.options.algorithm === 'auto';
+        const isAutoMode = !options.algorithm || options.algorithm === 'auto';
 
         // Build common input structure
         const optimizationInput: OptimizationInput = {
             origin: {
                 id: 'origin',
-                lat: args.origin.lat,
-                lng: args.origin.lng,
-                name: args.origin.name || 'Origin',
-                address: args.origin.address || '',
+                lat: origin.lat,
+                lng: origin.lng,
+                name: origin.name || 'Origin',
+                address: origin.address || '',
             },
-            destinations: args.destinations.map((d: any, i: number) => ({
-                id: d.id || `dest_${i}`,
-                lat: d.lat,
-                lng: d.lng,
-                name: d.name || `Location ${i + 1}`,
-                address: d.address || '',
-                preferredPickupTime: d.preferredPickupTime,
-                timeWindowStart: d.timeWindowStart,
-                timeWindowEnd: d.timeWindowEnd,
-            })),
-            tripType: args.tripType,
+            destinations: destinations.map((destination: any, i: number) => {
+                const d = requireCoordinate(destination, `destinations[${i}]`);
+
+                return {
+                    id: d.id || `dest_${i}`,
+                    lat: d.lat,
+                    lng: d.lng,
+                    name: d.name || `Location ${i + 1}`,
+                    address: d.address || '',
+                    preferredPickupTime: d.preferredPickupTime,
+                    timeWindowStart: d.timeWindowStart,
+                    timeWindowEnd: d.timeWindowEnd,
+                };
+            }),
+            tripType: input.tripType,
             constraints: {
-                departureTime: args.constraints.departureTime,
-                maxTotalDuration: args.constraints.maxTotalDuration,
-                bufferPerStop: args.constraints.bufferPerStop || 2,
+                departureTime: constraints.departureTime,
+                maxTotalDuration: constraints.maxTotalDuration,
+                bufferPerStop: constraints.bufferPerStop || 2,
             },
             options: {
-                useOSRM: args.options?.useRealRoads ?? true,
-                useTraffic: args.options?.considerTraffic ?? false,
-                generateAlternatives: args.options?.generateAlternatives ?? false,
-                maxAlternatives: args.options?.maxAlternatives ?? 2,
+                useOSRM: options.useRealRoads ?? true,
+                useTraffic: options.considerTraffic ?? false,
+                generateAlternatives: options.generateAlternatives ?? false,
+                maxAlternatives: options.maxAlternatives ?? 2,
             },
         };
 
@@ -169,8 +218,8 @@ export async function handleOptimizeRoute(args: any, requestId: string): Promise
             'auto': undefined,
         };
 
-        optimizationInput.options!.method = args.options?.algorithm
-            ? algorithmMap[args.options.algorithm]
+        optimizationInput.options!.method = options.algorithm
+            ? algorithmMap[options.algorithm]
             : undefined;
 
         // Import and call the standard optimizer
@@ -259,15 +308,28 @@ export async function handleOptimizeMultiCluster(args: any, requestId: string): 
     const startTime = Date.now();
 
     try {
+        const input = requireObject(args, 'arguments');
+        const employees = requireArray(input.employees, 'employees');
+        const cabs = requireArray(input.cabs, 'cabs');
+        const clusterConfig = input.config === undefined ? {} : requireObject(input.config, 'config');
+
+        if (employees.length === 0) {
+            throw new MCPError(ErrorCode.InvalidParams, 'employees must contain at least one employee');
+        }
+
+        if (cabs.length === 0) {
+            throw new MCPError(ErrorCode.InvalidParams, 'cabs must contain at least one cab');
+        }
+
         // Validate limits
-        if (args.employees.length > config.optimization.maxLocations) {
+        if (employees.length > config.optimization.maxLocations) {
             throw new MCPError(
                 ErrorCode.InvalidParams,
                 `Too many employees. Maximum allowed: ${config.optimization.maxLocations}`
             );
         }
 
-        if (args.cabs.length > config.optimization.maxCabs) {
+        if (cabs.length > config.optimization.maxCabs) {
             throw new MCPError(
                 ErrorCode.InvalidParams,
                 `Too many cabs. Maximum allowed: ${config.optimization.maxCabs}`
@@ -275,8 +337,8 @@ export async function handleOptimizeMultiCluster(args: any, requestId: string): 
         }
 
         logger.toolCall('optimize_multi_cluster', {
-            employeeCount: args.employees.length,
-            cabCount: args.cabs.length,
+            employeeCount: employees.length,
+            cabCount: cabs.length,
         }, requestId);
 
         // Import multi-cluster optimizer
@@ -297,9 +359,9 @@ export async function handleOptimizeMultiCluster(args: any, requestId: string): 
 
         // Execute clustering
         const result = optimizeMultiCluster(
-            args.employees,
-            args.cabs,
-            args.config || {}
+            employees,
+            cabs,
+            clusterConfig
         );
 
         const duration = Date.now() - startTime;
@@ -320,7 +382,7 @@ export async function handleOptimizeMultiCluster(args: any, requestId: string): 
                         })),
                         metrics: {
                             totalCabs: result.assignments.length,
-                            totalEmployees: args.employees.length,
+                            totalEmployees: employees.length,
                             unassignedEmployees: result.unassignedEmployees.length,
                         },
                         warnings: result.warnings,
@@ -352,7 +414,14 @@ export async function handleCalculateDistanceMatrix(args: any, requestId: string
     const startTime = Date.now();
 
     try {
-        if (args.coordinates.length > config.optimization.maxLocations) {
+        const input = requireObject(args, 'arguments');
+        const coordinates = requireArray(input.coordinates, 'coordinates');
+
+        if (coordinates.length < 2) {
+            throw new MCPError(ErrorCode.InvalidParams, 'coordinates must contain at least two points');
+        }
+
+        if (coordinates.length > config.optimization.maxLocations) {
             throw new MCPError(
                 ErrorCode.InvalidParams,
                 `Too many coordinates. Maximum allowed: ${config.optimization.maxLocations}`
@@ -360,8 +429,8 @@ export async function handleCalculateDistanceMatrix(args: any, requestId: string
         }
 
         logger.toolCall('calculate_distance_matrix', {
-            coordinateCount: args.coordinates.length,
-            useRealRoads: args.useRealRoads ?? true,
+            coordinateCount: coordinates.length,
+            useRealRoads: input.useRealRoads ?? true,
         }, requestId);
 
         // Import distance calculation
@@ -387,26 +456,29 @@ export async function handleCalculateDistanceMatrix(args: any, requestId: string
 
         let distanceMatrix: number[][];
         let durationMatrix: number[][] | undefined;
-        const method = args.useRealRoads ?? true ? 'osrm' : 'haversine';
+        const method = (input.useRealRoads ?? true) ? 'osrm' : 'haversine';
+        const normalizedCoordinates = coordinates.map((coordinate, i) =>
+            requireCoordinate(coordinate, `coordinates[${i}]`)
+        );
 
         if (method === 'osrm') {
             // Use OSRM for real road distances
-            const result = await getDistanceMatrix(args.coordinates);
+            const result = await getDistanceMatrix(normalizedCoordinates);
             distanceMatrix = result.distances;
             durationMatrix = result.durations;
         } else {
             // Use haversine formula for straight-line distances
-            const n = args.coordinates.length;
+            const n = normalizedCoordinates.length;
             distanceMatrix = Array(n).fill(0).map(() => Array(n).fill(0));
 
             for (let i = 0; i < n; i++) {
                 for (let j = 0; j < n; j++) {
                     if (i !== j) {
                         distanceMatrix[i][j] = haversineDistance(
-                            args.coordinates[i].lat,
-                            args.coordinates[i].lng,
-                            args.coordinates[j].lat,
-                            args.coordinates[j].lng
+                            normalizedCoordinates[i].lat,
+                            normalizedCoordinates[i].lng,
+                            normalizedCoordinates[j].lat,
+                            normalizedCoordinates[j].lng
                         );
                     }
                 }

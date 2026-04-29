@@ -12,8 +12,8 @@ loadEnv();
 // Configuration schema with validation
 const configSchema = z.object({
     // Security
-    apiKeys: z.string().transform(val => val.split(',').map(k => k.trim())).default(''),
-    requireAuth: z.string().transform(val => val === 'true').default('true'),
+    apiKeys: z.array(z.string()).default([]),
+    requireAuth: z.boolean().default(true),
 
     // HTTP Server
     http: z.object({
@@ -51,19 +51,33 @@ const configSchema = z.object({
     }),
 });
 
+function parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
+    if (value === undefined) {
+        return defaultValue;
+    }
+
+    return value.toLowerCase() === 'true';
+}
+
+function parseList(value: string | undefined): string[] {
+    return value
+        ? value.split(',').map(item => item.trim()).filter(Boolean)
+        : [];
+}
+
 /**
  * Parse and validate configuration from environment
  */
 function parseConfig() {
     const rawConfig = {
-        apiKeys: process.env.MCP_API_KEYS || '',
-        requireAuth: process.env.MCP_REQUIRE_AUTH || 'true',
+        apiKeys: parseList(process.env.MCP_API_KEYS),
+        requireAuth: parseBoolean(process.env.MCP_REQUIRE_AUTH, true),
 
         http: {
             port: parseInt(process.env.MCP_HTTP_PORT || '3001', 10),
             host: process.env.MCP_HTTP_HOST || 'localhost',
-            enableCors: process.env.MCP_ENABLE_CORS === 'true',
-            corsOrigins: process.env.MCP_CORS_ORIGINS?.split(',').map(o => o.trim()) || [],
+            enableCors: parseBoolean(process.env.MCP_ENABLE_CORS, true),
+            corsOrigins: parseList(process.env.MCP_CORS_ORIGINS),
         },
 
         routing: {
@@ -79,14 +93,14 @@ function parseConfig() {
         },
 
         rateLimit: {
-            enabled: process.env.ENABLE_RATE_LIMIT !== 'false',
+            enabled: parseBoolean(process.env.ENABLE_RATE_LIMIT, true),
             max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
             windowMinutes: parseInt(process.env.RATE_LIMIT_WINDOW_MINUTES || '15', 10),
         },
 
         logging: {
             level: (process.env.LOG_LEVEL || 'info') as 'debug' | 'info' | 'warn' | 'error',
-            logRequests: process.env.LOG_REQUESTS !== 'false',
+            logRequests: parseBoolean(process.env.LOG_REQUESTS, true),
         },
     };
 
