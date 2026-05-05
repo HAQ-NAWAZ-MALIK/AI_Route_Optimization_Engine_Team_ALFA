@@ -152,9 +152,9 @@ class LevelQueue {
     }
 }
 
-// ============================================================================
-// CORE BMSSP ALGORITHM
-// ============================================================================
+// =========================================================================
+//  CORE BMSSP ALGORITHM   
+// =========================================================================
 
 /**
  * Compute K and T parameters based on graph size.
@@ -220,6 +220,7 @@ function baseCase(
 
         processed[u] = true;
         U0.push(u);
+        
 
         for (let v = 0; v < n; v++) {
             if (v === u) continue;
@@ -269,6 +270,7 @@ function findPivots(
 ): { P: FrontierSet, W: FrontierSet } {
     const n = distMatrix.length;
 
+    
     // Initialize touched set W with frontier S
     const W = S.copy();
     const tmp = [...db];
