@@ -7,6 +7,7 @@
 // COORDINATE & LOCATION TYPES
 // ============================================================================
 
+
 export interface Coordinate {
     lat: number;
     lng: number;
