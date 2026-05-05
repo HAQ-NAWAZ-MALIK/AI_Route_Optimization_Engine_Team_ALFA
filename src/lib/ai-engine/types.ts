@@ -250,6 +250,8 @@ export interface Individual {
     timeWindowPenalty: number;
 }
 
+
+
 export interface Population {
     individuals: Individual[];
     generation: number;
