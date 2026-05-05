@@ -564,9 +564,11 @@ export function calculateAdditionalVehiclesNeeded(
     };
 }
 
+
 /**
  * Estimate time needed for a route based on distance and stops
  */
+
 export function estimateRouteDuration(
     route: OptimizedRoute,
     avgSpeedKmh: number = 25, // Urban average
