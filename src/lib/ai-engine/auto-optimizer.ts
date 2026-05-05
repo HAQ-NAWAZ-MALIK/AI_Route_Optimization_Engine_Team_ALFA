@@ -55,7 +55,7 @@ export interface AutoOptimizeResult {
 }
 
 // ============================================================================
-// MAIN AUTO-OPTIMIZE FUNCTION
+// MAIN AUTO-OPTIMIZE FUNCTION    
 // ============================================================================
 
 /**
@@ -172,7 +172,7 @@ export async function optimizeRouteAuto(
         return { order: result.route, time: Date.now() - start };
     };
 
-    // Run ALL algorithms in parallel using Promise.allSettled
+    // Run ALL algorithms  in  parallel using Promise.allSettled
     const algorithmPromises = [
         runChristofides().then(r => ({ ...r, algorithm: 'christofides' as const })),
         runGenetic().then(r => ({ ...r, algorithm: 'genetic_algorithm' as const })),
