@@ -566,7 +566,7 @@ export function calculateAdditionalVehiclesNeeded(
 
 
 /**
- * Estimate time needed for a route based on distance and stops
+ * Estimated time needed for a route based on distance and stops
  */
 
 export function estimateRouteDuration(
