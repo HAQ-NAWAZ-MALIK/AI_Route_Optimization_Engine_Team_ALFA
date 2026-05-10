@@ -11,7 +11,7 @@ datasource db {
 }
 
 // ============================================================================
-// AUTHENTICATION & USER MANAGEMENT
+// AUTHENTICATION & USER MANAGEMENT access
 // ============================================================================
 
 model User {
