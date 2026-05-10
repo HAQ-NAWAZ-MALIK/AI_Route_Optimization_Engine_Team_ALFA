@@ -187,7 +187,7 @@ model Invoice {
   @@index([status])
   @@index([userId, createdAt])
   @@map("invoices")
-}
+} 
 
 // ============================================================================
 // AUDIT LOGGING
@@ -218,7 +218,7 @@ enum InvoiceStatus {
 }
 
 // ============================================================================
-// USAGE TRACKING & ANALYTICS
+// USAGE TRACKING & ANALYTICS OF USER
 // ============================================================================
 
 model UsageLog {
