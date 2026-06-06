@@ -9,11 +9,7 @@ import rateLimit from 'express-rate-limit';
 import { config, isValidApiKey, getServerInfo } from './config.js';
 import { logger } from './logger.js';
 import { MCPError, ErrorCode, handleError } from './errors.js';
-import {
-    handleOptimizeRoute,
-    handleOptimizeMultiCluster,
-    handleCalculateDistanceMatrix,
-} from './tools/handlers.js';
+import { TOOL_NAMES, callToolByName } from './tools/dispatcher.js';
 import {
     optimizeRouteSchema,
     optimizeMultiClusterSchema,
@@ -151,7 +147,7 @@ app.get('/health', (req, res) => {
 app.get('/api/info', (req, res) => {
     res.json({
         ...getServerInfo(),
-        tools: ['optimize_route', 'optimize_multi_cluster', 'calculate_distance_matrix'],
+        tools: TOOL_NAMES,
         transport: 'http',
     });
 });
@@ -190,27 +186,7 @@ app.post('/api/tools/:toolName', authenticate, async (req, res) => {
     const args = req.body;
 
     try {
-        let result;
-
-        switch (toolName) {
-            case 'optimize_route':
-                result = await handleOptimizeRoute(args, requestId);
-                break;
-
-            case 'optimize_multi_cluster':
-                result = await handleOptimizeMultiCluster(args, requestId);
-                break;
-
-            case 'calculate_distance_matrix':
-                result = await handleCalculateDistanceMatrix(args, requestId);
-                break;
-
-            default:
-                throw new MCPError(
-                    ErrorCode.ToolNotFound,
-                    `Unknown tool: ${toolName}`
-                );
-        }
+        const result = await callToolByName(toolName, args, requestId);
 
         res.json({
             requestId,
@@ -271,20 +247,7 @@ app.post('/mcp', authenticate, async (req, res) => {
 
                 const { name } = params;
                 const args = params.arguments ?? {};
-
-                switch (name) {
-                    case 'optimize_route':
-                        result = await handleOptimizeRoute(args, requestId);
-                        break;
-                    case 'optimize_multi_cluster':
-                        result = await handleOptimizeMultiCluster(args, requestId);
-                        break;
-                    case 'calculate_distance_matrix':
-                        result = await handleCalculateDistanceMatrix(args, requestId);
-                        break;
-                    default:
-                        throw new MCPError(ErrorCode.ToolNotFound, `Unknown tool: ${name}`);
-                }
+                result = await callToolByName(name, args, requestId);
                 break;
 
             default:

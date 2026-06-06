@@ -20,11 +20,7 @@ import {
     optimizeMultiClusterSchema,
     calculateDistanceMatrixSchema,
 } from './schemas/tool-schemas.js';
-import {
-    handleOptimizeRoute,
-    handleOptimizeMultiCluster,
-    handleCalculateDistanceMatrix,
-} from './tools/handlers.js';
+import { callToolByName } from './tools/dispatcher.js';
 
 /**
  * Initialize MCP Server
@@ -139,23 +135,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         logger.info(`Tool execution: ${name}`, { requestId });
 
-        // Route to appropriate handler
-        switch (name) {
-            case 'optimize_route':
-                return await handleOptimizeRoute(args, requestId);
-
-            case 'optimize_multi_cluster':
-                return await handleOptimizeMultiCluster(args, requestId);
-
-            case 'calculate_distance_matrix':
-                return await handleCalculateDistanceMatrix(args, requestId);
-
-            default:
-                throw new MCPError(
-                    ErrorCode.ToolNotFound,
-                    `Unknown tool: ${name}`
-                );
-        }
+        return await callToolByName(name, args, requestId);
 
     } catch (error) {
         const mcpError = handleError(error);
