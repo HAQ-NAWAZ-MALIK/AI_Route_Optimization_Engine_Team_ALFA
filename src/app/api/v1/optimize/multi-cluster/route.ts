@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { optimizeMultiCluster, ClusterResult } from '@/lib/multi-cluster-optimizer';
 import { optimizeRoute } from '@/lib/ai-engine';
 import { validateMultiClusterRequest } from '@/lib/api/validation';
-import { processApiRequest } from '@/lib/api/api-middleware';
+import { addRateLimitHeaders, processApiRequest, recordApiUsage } from '@/lib/api/api-middleware';
 import type { Employee, Cab, Config } from '@/lib/csv-parser';
 import type {
     MultiClusterRequest,
@@ -39,16 +39,18 @@ export async function POST(request: NextRequest): Promise<NextResponse<MultiClus
         try {
             input = await request.json();
         } catch {
-            return NextResponse.json(
+            const apiResponse = NextResponse.json<ErrorResponse>(
                 { success: false, error: 'Invalid JSON', message: 'Request body must be valid JSON', requestId },
                 { status: 400 }
             );
+            await recordApiUsage(request, context!, apiResponse, startTime, 'Invalid JSON');
+            return apiResponse;
         }
 
         // Validate input
         const validation = validateMultiClusterRequest(input);
         if (!validation.valid) {
-            return NextResponse.json(
+            const apiResponse = NextResponse.json<ErrorResponse>(
                 {
                     success: false,
                     error: 'Validation failed',
@@ -57,6 +59,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<MultiClus
                 },
                 { status: 400 }
             );
+            await recordApiUsage(request, context!, apiResponse, startTime, validation.errors.join('; '));
+            return apiResponse;
         }
 
         const req = input as MultiClusterRequest;
@@ -230,12 +234,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<MultiClus
             response.errors = [`${clusterResult.unassignedEmployees.length} employees could not be assigned due to capacity constraints`];
         }
 
-        return NextResponse.json(response);
+        const apiResponse = await addRateLimitHeaders(NextResponse.json(response), context!);
+        await recordApiUsage(request, context!, apiResponse, startTime);
+        return apiResponse;
 
     } catch (error) {
         console.error('Multi-cluster optimization error:', error);
 
-        return NextResponse.json(
+        const apiResponse = NextResponse.json<ErrorResponse>(
             {
                 success: false,
                 error: 'Optimization failed',
@@ -244,5 +250,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<MultiClus
             },
             { status: 500 }
         );
+        await recordApiUsage(request, context!, apiResponse, startTime, error instanceof Error ? error.message : 'Unexpected error');
+        return apiResponse;
     }
 }

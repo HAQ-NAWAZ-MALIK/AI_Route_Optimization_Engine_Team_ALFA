@@ -11,6 +11,8 @@ import { prisma } from '@/lib/db/prisma';
 import { handleApiError, Errors } from '@/lib/api/error-handler';
 import { requireAuth } from '@/lib/api/permissions';
 import { logAuditEvent } from '@/lib/audit/logger';
+import { getUserSubscription } from '@/lib/billing/subscription-service';
+import { calculateRequestCost } from '@/lib/billing/usage-calculator';
 import { z } from 'zod';
 
 const QuerySchema = z.object({
@@ -60,25 +62,29 @@ export async function GET(request: NextRequest) {
         }
 
         // Get usage logs
-        const logs = await prisma.usageLog.findMany({
-            where: {
-                userId: session.user.id,
-                timestamp: {
-                    gte: new Date(query.startDate),
-                    lte: new Date(query.endDate),
+        const [subscription, logs] = await Promise.all([
+            getUserSubscription(session.user.id),
+            prisma.usageLog.findMany({
+                where: {
+                    userId: session.user.id,
+                    timestamp: {
+                        gte: new Date(query.startDate),
+                        lte: new Date(query.endDate),
+                    },
+                    ...(query.apiKeyId ? { apiKeyId: query.apiKeyId } : {}),
                 },
-                ...(query.apiKeyId ? { apiKeyId: query.apiKeyId } : {}),
-            },
-            include: {
-                apiKey: {
-                    select: {
-                        name: true,
-                        prefix: true,
+                include: {
+                    apiKey: {
+                        select: {
+                            name: true,
+                            prefix: true,
+                        },
                     },
                 },
-            },
-            orderBy: { timestamp: 'asc' },
-        });
+                orderBy: { timestamp: 'asc' },
+            }),
+        ]);
+        const plan = subscription.plan as 'FREE' | 'PRO' | 'ENTERPRISE';
 
         // Log export for audit
         await logAuditEvent('USAGE_DATA_EXPORTED', session.user.id, {
@@ -97,7 +103,7 @@ export async function GET(request: NextRequest) {
                 statusCode: log.statusCode,
                 responseTime: log.responseTime,
                 apiKeyName: log.apiKey.name,
-                cost: 0, // TODO: Calculate
+                cost: calculateRequestCost(log.endpoint, plan),
             }));
 
             return NextResponse.json(
@@ -123,7 +129,7 @@ export async function GET(request: NextRequest) {
         // CSV format
         const csvHeaders = 'Timestamp,Endpoint,Method,Status,ResponseTime,Cost,APIKey\n';
         const csvRows = logs.map(log =>
-            `${log.timestamp.toISOString()},${log.endpoint},${log.method},${log.statusCode},${log.responseTime},0.00,${log.apiKey.name}`
+            `${log.timestamp.toISOString()},${log.endpoint},${log.method},${log.statusCode},${log.responseTime},${(calculateRequestCost(log.endpoint, plan) / 100).toFixed(2)},${log.apiKey.name}`
         ).join('\n');
 
         const csv = csvHeaders + csvRows;

@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { optimizeRoute } from '@/lib/ai-engine';
 import { validateOptimizeRouteRequest } from '@/lib/api/validation';
-import { processApiRequest, addRateLimitHeaders } from '@/lib/api/api-middleware';
+import { processApiRequest, addRateLimitHeaders, recordApiUsage } from '@/lib/api/api-middleware';
 import type {
     OptimizeRouteRequest,
     OptimizeRouteResponse,
@@ -40,16 +40,18 @@ export async function POST(request: NextRequest): Promise<NextResponse<OptimizeR
         try {
             input = await request.json();
         } catch {
-            return NextResponse.json(
+            const apiResponse = NextResponse.json<ErrorResponse>(
                 { success: false, error: 'Invalid JSON', message: 'Request body must be valid JSON', requestId },
                 { status: 400 }
             );
+            await recordApiUsage(request, context!, apiResponse, startTime, 'Invalid JSON');
+            return apiResponse;
         }
 
         // Validate input
         const validation = validateOptimizeRouteRequest(input);
         if (!validation.valid) {
-            return NextResponse.json(
+            const apiResponse = NextResponse.json<ErrorResponse>(
                 {
                     success: false,
                     error: 'Validation failed',
@@ -58,6 +60,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<OptimizeR
                 },
                 { status: 400 }
             );
+            await recordApiUsage(request, context!, apiResponse, startTime, validation.errors.join('; '));
+            return apiResponse;
         }
 
         const req = input as OptimizeRouteRequest;
@@ -178,12 +182,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<OptimizeR
             },
         };
 
-        return NextResponse.json(response);
+        const apiResponse = await addRateLimitHeaders(NextResponse.json(response), context!);
+        await recordApiUsage(request, context!, apiResponse, startTime);
+        return apiResponse;
 
     } catch (error) {
         console.error('Optimization error:', error);
 
-        return NextResponse.json(
+        const apiResponse = NextResponse.json<ErrorResponse>(
             {
                 success: false,
                 error: 'Optimization failed',
@@ -192,5 +198,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<OptimizeR
             },
             { status: 500 }
         );
+        await recordApiUsage(request, context!, apiResponse, startTime, error instanceof Error ? error.message : 'Unexpected error');
+        return apiResponse;
     }
 }

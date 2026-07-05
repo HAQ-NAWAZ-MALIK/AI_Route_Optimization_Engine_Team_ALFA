@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildDistanceMatrixFromCoordinates, haversineDistance } from '@/lib/ai-engine';
 import { validateDistanceMatrixRequest } from '@/lib/api/validation';
-import { processApiRequest } from '@/lib/api/api-middleware';
+import { addRateLimitHeaders, processApiRequest, recordApiUsage } from '@/lib/api/api-middleware';
 import type {
     DistanceMatrixRequest,
     DistanceMatrixResponse,
@@ -35,16 +35,18 @@ export async function POST(request: NextRequest): Promise<NextResponse<DistanceM
         try {
             input = await request.json();
         } catch {
-            return NextResponse.json(
+            const apiResponse = NextResponse.json<ErrorResponse>(
                 { success: false, error: 'Invalid JSON', message: 'Request body must be valid JSON', requestId },
                 { status: 400 }
             );
+            await recordApiUsage(request, context!, apiResponse, startTime, 'Invalid JSON');
+            return apiResponse;
         }
 
         // Validate input
         const validation = validateDistanceMatrixRequest(input);
         if (!validation.valid) {
-            return NextResponse.json(
+            const apiResponse = NextResponse.json<ErrorResponse>(
                 {
                     success: false,
                     error: 'Validation failed',
@@ -53,6 +55,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<DistanceM
                 },
                 { status: 400 }
             );
+            await recordApiUsage(request, context!, apiResponse, startTime, validation.errors.join('; '));
+            return apiResponse;
         }
 
         const req = input as DistanceMatrixRequest;
@@ -92,12 +96,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<DistanceM
             },
         };
 
-        return NextResponse.json(response);
+        const apiResponse = await addRateLimitHeaders(NextResponse.json(response), context!);
+        await recordApiUsage(request, context!, apiResponse, startTime);
+        return apiResponse;
 
     } catch (error) {
         console.error('Distance matrix error:', error);
 
-        return NextResponse.json(
+        const apiResponse = NextResponse.json<ErrorResponse>(
             {
                 success: false,
                 error: 'Matrix calculation failed',
@@ -106,6 +112,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<DistanceM
             },
             { status: 500 }
         );
+        await recordApiUsage(request, context!, apiResponse, startTime, error instanceof Error ? error.message : 'Unexpected error');
+        return apiResponse;
     }
 }
 

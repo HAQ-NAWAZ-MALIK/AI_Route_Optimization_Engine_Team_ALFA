@@ -21,6 +21,8 @@ export interface ApiContext {
     keyInfo: ApiKeyInfo;
     rateLimit: RateLimitResult;
     requestId: string;
+    dbApiKeyId?: string;
+    dbUserId?: string;
 }
 
 export interface MiddlewareResult {
@@ -100,6 +102,26 @@ export async function processApiRequest(request: NextRequest): Promise<Middlewar
     // Fetch effective rate limits from DB config (with fallback to defaults)
     const effectiveLimits = await getEffectiveLimitsForTier(keyInfo.tier);
 
+    let dbApiKeyId: string | undefined;
+    let dbUserId: string | undefined;
+
+    if (keyInfo.key.startsWith('ropt_')) {
+        try {
+            const dbKey = await prisma.apiKey.findFirst({
+                where: {
+                    prefix: keyInfo.key.substring(0, 12),
+                    active: true,
+                },
+                select: { id: true, userId: true },
+            });
+
+            dbApiKeyId = dbKey?.id;
+            dbUserId = dbKey?.userId;
+        } catch (error) {
+            console.error('Failed to resolve API key for usage tracking:', error);
+        }
+    }
+
     // Check rate limits
     const rateLimiter = getRateLimiter();
     const rateLimit = rateLimiter.check(keyInfo.key, effectiveLimits);
@@ -135,9 +157,8 @@ export async function processApiRequest(request: NextRequest): Promise<Middlewar
     // Check user's subscription limits (monthly requests)
     try {
         if (keyInfo.key.startsWith('ropt_')) {
-            const prefix = keyInfo.key.substring(0, 13);
             const dbKey = await prisma.apiKey.findFirst({
-                where: { prefix },
+                where: { prefix: keyInfo.key.substring(0, 12), active: true },
                 select: { userId: true },
             });
 
@@ -195,55 +216,55 @@ export async function processApiRequest(request: NextRequest): Promise<Middlewar
     }
 
 
-    // Log to database if available
-    try {
-        const endpoint = new URL(request.url).pathname;
-        const method = request.method;
-
-        // Try to find the database key ID for logging
-        if (keyInfo.key.startsWith('ropt_')) {
-            const prefix = keyInfo.key.substring(0, 13);
-            const dbKey = await prisma.apiKey.findFirst({
-                where: { prefix },
-                select: { id: true, userId: true },
-            });
-
-            if (dbKey) {
-                await prisma.usageLog.create({
-                    data: {
-                        apiKeyId: dbKey.id,
-                        userId: dbKey.userId,
-                        endpoint,
-                        method,
-                        statusCode: 200, // Will be updated by route handler
-                        responseTime: 0, // Will be updated by route handler
-                        timestamp: new Date(),
-                    },
-                });
-            }
-        }
-    } catch (error) {
-        // Logging failure shouldn't break the request
-        console.error('Usage logging error:', error);
-    }
-
     return {
         success: true,
         context: {
             keyInfo,
             rateLimit,
             requestId,
+            dbApiKeyId,
+            dbUserId,
         },
     };
 }
 
 /**
+ * Record the completed API request after the route has produced a response.
+ */
+export async function recordApiUsage(
+    request: NextRequest,
+    context: ApiContext,
+    response: NextResponse,
+    startTime: number,
+    errorMessage?: string
+): Promise<void> {
+    if (!context.dbApiKeyId || !context.dbUserId) return;
+
+    try {
+        await prisma.usageLog.create({
+            data: {
+                apiKeyId: context.dbApiKeyId,
+                userId: context.dbUserId,
+                endpoint: new URL(request.url).pathname,
+                method: request.method,
+                statusCode: response.status,
+                responseTime: Date.now() - startTime,
+                errorMessage: errorMessage || null,
+                timestamp: new Date(),
+            },
+        });
+    } catch (error) {
+        console.error('Usage logging error:', error);
+    }
+}
+
+/**
  * Add rate limit headers to a response
  */
-export async function addRateLimitHeaders(
-    response: NextResponse,
+export async function addRateLimitHeaders<T>(
+    response: NextResponse<T>,
     context: ApiContext
-): Promise<NextResponse> {
+): Promise<NextResponse<T>> {
     const limits = await getKeyLimits(context.keyInfo.key);
 
     response.headers.set('X-Request-Id', context.requestId);

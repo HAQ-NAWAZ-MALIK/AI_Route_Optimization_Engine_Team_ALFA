@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { handleApiError, Errors } from '@/lib/api/error-handler';
 import { requireAuth } from '@/lib/api/permissions';
+import { getUserSubscription } from '@/lib/billing/subscription-service';
+import { calculateRequestCost } from '@/lib/billing/usage-calculator';
 import { z } from 'zod';
 
 const QuerySchema = z.object({
@@ -71,7 +73,9 @@ export async function GET(request: NextRequest) {
         };
 
         // Get aggregated statistics
-        const [totalLogs, requestsByEndpoint, requestsByDay] = await Promise.all([
+        const [subscription, totalLogs, requestsByEndpoint, requestsByDay] = await Promise.all([
+            getUserSubscription(session.user.id),
+
             // Total requests with success/fail counts
             prisma.usageLog.groupBy({
                 by: ['statusCode'],
@@ -107,12 +111,17 @@ export async function GET(request: NextRequest) {
             .reduce((sum, log) => sum + log._count.id, 0);
         const failedRequests = totalRequests - successfulRequests;
         const averageResponseTime = totalLogs.reduce((sum, log) => sum + (log._avg.responseTime || 0), 0) / totalLogs.length || 0;
+        const plan = subscription.plan as 'FREE' | 'PRO' | 'ENTERPRISE';
 
         // Format requests by endpoint
         const endpointStats = requestsByEndpoint.reduce((acc, item) => {
             acc[item.endpoint] = item._count.id;
             return acc;
         }, {} as Record<string, number>);
+
+        const totalCost = requestsByEndpoint.reduce((sum, item) => {
+            return sum + calculateRequestCost(item.endpoint, plan) * item._count.id;
+        }, 0);
 
         // Format requests by day
         const dailyStats = requestsByDay.map(row => ({
@@ -126,7 +135,7 @@ export async function GET(request: NextRequest) {
                 totalRequests,
                 successfulRequests,
                 failedRequests,
-                totalCost: 0, // TODO: Calculate from pricing
+                totalCost: Math.round(totalCost),
                 averageResponseTime: Math.round(averageResponseTime),
                 requestsByEndpoint: endpointStats,
                 requestsByDay: dailyStats,

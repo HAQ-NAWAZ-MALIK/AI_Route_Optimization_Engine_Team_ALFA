@@ -141,7 +141,7 @@ export async function validateApiKey(key: string): Promise<ApiKeyInfo | null> {
         const prefix = key.substring(0, 12); // First 12 chars to match generator
 
         const dbKey = await prisma.apiKey.findFirst({
-            where: { prefix },
+            where: { prefix, active: true },
             include: {
                 user: {
                     select: {

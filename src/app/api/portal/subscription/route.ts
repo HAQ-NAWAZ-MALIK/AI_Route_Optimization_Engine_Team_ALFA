@@ -8,6 +8,7 @@ import { handleApiError } from '@/lib/api/error-handler';
 import { requireAuth } from '@/lib/api/permissions';
 import { getUserSubscription } from '@/lib/billing/subscription-service';
 import { PLANS, getPlanLimits } from '@/lib/billing/plans';
+import { getUsageSummary } from '@/lib/billing/usage-calculator';
 import { prisma } from '@/lib/db/prisma';
 
 export async function GET() {
@@ -21,6 +22,7 @@ export async function GET() {
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
+        const endOfMonth = new Date();
 
         const usageCount = await prisma.usageLog.count({
             where: {
@@ -29,6 +31,7 @@ export async function GET() {
                 statusCode: { gte: 200, lt: 300 },
             },
         });
+        const usageSummary = await getUsageSummary(session.user.id, startOfMonth, endOfMonth);
 
         const quota = limits.requestsPerMonth;
         const usagePercentage = quota === -1 ? 0 : Math.min((usageCount / quota) * 100, 100);
@@ -41,6 +44,7 @@ export async function GET() {
                 limit: quota,
                 percentage: Math.round(usagePercentage),
                 remaining: quota === -1 ? -1 : Math.max(0, quota - usageCount),
+                totalCost: usageSummary.totalCost,
             },
             plan: {
                 name: sub.plan,

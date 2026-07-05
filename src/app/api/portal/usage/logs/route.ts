@@ -10,11 +10,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { handleApiError, Errors } from '@/lib/api/error-handler';
 import { requireAuth } from '@/lib/api/permissions';
+import { getUserSubscription } from '@/lib/billing/subscription-service';
+import { calculateRequestCost } from '@/lib/billing/usage-calculator';
 import { z } from 'zod';
 
 const QuerySchema = z.object({
-    page: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().positive()).optional().default('1'),
-    limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().max(100)).optional().default('50'),
+    page: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().positive()).optional().default(1),
+    limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().max(100)).optional().default(50),
     apiKeyId: z.string().uuid().optional(),
     status: z.enum(['success', 'error', 'all']).optional().default('all'),
     endpoint: z.string().optional(),
@@ -36,7 +38,7 @@ export async function GET(request: NextRequest) {
         const session = await requireAuth();
 
         // Parse query parameters
-        const { searchParams } = newURL(request.url);
+        const { searchParams } = new URL(request.url);
         const query = QuerySchema.parse({
             page: searchParams.get('page') || undefined,
             limit: searchParams.get('limit') || undefined,
@@ -94,7 +96,8 @@ export async function GET(request: NextRequest) {
         const skip = (page - 1) * limit;
 
         // Get total count and logs
-        const [total, logs] = await Promise.all([
+        const [subscription, total, logs] = await Promise.all([
+            getUserSubscription(session.user.id),
             prisma.usageLog.count({ where }),
             prisma.usageLog.findMany({
                 where,
@@ -111,6 +114,7 @@ export async function GET(request: NextRequest) {
                 take: limit,
             }),
         ]);
+        const plan = subscription.plan as 'FREE' | 'PRO' | 'ENTERPRISE';
 
         // Format logs
         const formattedLogs = logs.map(log => ({
@@ -122,7 +126,7 @@ export async function GET(request: NextRequest) {
             apiKeyName: log.apiKey.name,
             apiKeyPrefix: log.apiKey.prefix,
             timestamp: log.timestamp.toISOString(),
-            cost: 0, // TODO: Calculate from pricing
+            cost: calculateRequestCost(log.endpoint, plan),
         }));
 
         return NextResponse.json({

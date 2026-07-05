@@ -30,6 +30,7 @@ interface SubscriptionData {
         limit: number;
         percentage: number;
         remaining: number;
+        totalCost: number;
     };
     plan: {
         name: string;
@@ -305,6 +306,9 @@ export default function BillingPage() {
                                 {data.usage.remaining.toLocaleString()} requests remaining
                             </p>
                         )}
+                        <p style={{ marginTop: 'var(--space-2)', fontSize: '13px', color: 'var(--gray-300)' }}>
+                            Usage charges this month: ${((data.usage.totalCost || 0) / 100).toFixed(2)}
+                        </p>
                     </div>
                 )}
             </div>
