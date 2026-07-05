@@ -11,7 +11,12 @@
         "mcp:install": "cd mcp-server && npm install",
         "mcp:build": "cd mcp-server && npm run build",
         "mcp:dev": "cd mcp-server && npm run dev",
-        "mcp:http": "cd mcp-server && npm run http"
+        "mcp:http": "cd mcp-server && npm run http",
+        "db:push": "prisma db push",
+        "db:seed": "prisma db seed"
+    },
+    "prisma": {
+        "seed": "ts-node --compiler-options {\"module\":\"CommonJS\",\"moduleResolution\":\"node\"} prisma/seed.ts"
     },
     "dependencies": {
         "@auth/prisma-adapter": "^2.11.1",
