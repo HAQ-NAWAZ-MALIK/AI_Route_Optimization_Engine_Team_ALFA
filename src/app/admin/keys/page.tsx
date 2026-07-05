@@ -9,6 +9,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { CreateKeyModal } from '@/components/portal/api-keys/create-key-modal';
+import { ApiKeyDisplay } from '@/components/portal/api-keys/key-display';
 
 interface ApiKey {
     id: string;
@@ -33,6 +35,8 @@ export default function AdminKeysPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filter, setFilter] = useState<'all' | 'active' | 'revoked'>('all');
     const [revokingId, setRevokingId] = useState<string | null>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [newApiKey, setNewApiKey] = useState<string | null>(null);
 
     const fetchKeys = async () => {
         try {
@@ -71,6 +75,12 @@ export default function AdminKeysPage() {
         }
     };
 
+    const handleCreateSuccess = (key: string) => {
+        setNewApiKey(key);
+        setShowCreateModal(false);
+        fetchKeys();
+    };
+
     const filteredKeys = keys
         .filter(key => {
             if (filter === 'active') return key.active;
@@ -89,8 +99,17 @@ export default function AdminKeysPage() {
     return (
         <div style={{ padding: 'var(--space-6)' }}>
             <div className="page-header">
-                <h1 className="page-title">API Key Oversight</h1>
-                <p className="page-description">Monitor and manage all platform API keys</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
+                    <div>
+                        <h1 className="page-title">API Key Oversight</h1>
+                        <p className="page-description">
+                            Monitor, create, and revoke platform API keys.
+                        </p>
+                    </div>
+                    <Button variant="primary" onClick={() => setShowCreateModal(true)}>
+                        Create New API Key
+                    </Button>
+                </div>
             </div>
 
             {/* Stats bar */}
@@ -262,6 +281,19 @@ export default function AdminKeysPage() {
                     </div>
                 )}
             </div>
+
+            <CreateKeyModal
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSuccess={handleCreateSuccess}
+            />
+
+            {newApiKey && (
+                <ApiKeyDisplay
+                    apiKey={newApiKey}
+                    onClose={() => setNewApiKey(null)}
+                />
+            )}
         </div>
     );
 }
