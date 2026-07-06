@@ -49,7 +49,7 @@ export async function getRoute(
 
     // Try Mapbox first (more reliable)
     try {
-        const { getMapboxRoute } = await import('./mapbox-directions.js');
+        const { getMapboxRoute } = await import('./mapbox-directions');
         const mapboxResult = await getMapboxRoute(coordinates, {
             profile: 'driving-traffic',
             alternatives: options.alternatives,

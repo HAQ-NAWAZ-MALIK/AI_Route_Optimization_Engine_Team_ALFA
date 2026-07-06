@@ -8,7 +8,7 @@
  */
 
 import { Resend } from 'resend';
-import { BaseEmailProvider, EmailOptions } from './email-provider';
+import { BaseEmailProvider, EmailOptions } from '../email-provider';
 
 export class ResendEmailProvider extends BaseEmailProvider {
     private resend: Resend;

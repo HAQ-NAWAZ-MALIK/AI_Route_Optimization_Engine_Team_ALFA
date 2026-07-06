@@ -12,38 +12,38 @@ import { ResendEmailProvider } from './providers/resend-provider';
 // import { SendGridProvider } from './providers/sendgrid-provider';
 // import { NodemailerProvider } from './providers/nodemailer-provider';
 
-let emailService: EmailProvider | null = null;
+let emailServiceInstance: EmailProvider | null = null;
 
 /**
  * Get the configured email service
  * Singleton pattern - one instance for the whole app
  */
 export function getEmailService(): EmailProvider {
-    if (!emailService) {
+    if (!emailServiceInstance) {
         const provider = process.env.EMAIL_PROVIDER || 'resend';
 
         switch (provider.toLowerCase()) {
             case 'resend':
-                emailService = new ResendEmailProvider();
+                emailServiceInstance = new ResendEmailProvider();
                 break;
 
             // Add more providers here:
             // case 'sendgrid':
-            //     emailService = new SendGridProvider();
+            //     emailServiceInstance = new SendGridProvider();
             //     break;
             // case 'nodemailer':
-            //     emailService = new NodemailerProvider();
+            //     emailServiceInstance = new NodemailerProvider();
             //     break;
 
             default:
                 console.warn(`[Email] Unknown provider: ${provider}, defaulting to Resend`);
-                emailService = new ResendEmailProvider();
+                emailServiceInstance = new ResendEmailProvider();
         }
 
         console.log(`[Email] Initialized with provider: ${provider}`);
     }
 
-    return emailService;
+    return emailServiceInstance;
 }
 
 /**

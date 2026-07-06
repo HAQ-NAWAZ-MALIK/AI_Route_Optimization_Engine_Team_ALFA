@@ -1,0 +1,34 @@
+# ============================================================================
+# MCP Server Ingress — dedicated host for the remote MCP endpoint.
+# Auth is enforced by the app (MCP_REQUIRE_AUTH + MCP_API_KEYS).
+# ============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: route-optimizer-mcp
+  namespace: alpha
+  labels:
+    app.kubernetes.io/name: route-optimizer-mcp
+    app.kubernetes.io/part-of: route-optimizer
+    app.kubernetes.io/component: mcp-server
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - mcp.route-optimizer.nikhilbhatia.com
+      secretName: route-optimizer-mcp-tls
+  rules:
+    - host: mcp.route-optimizer.nikhilbhatia.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: route-optimizer-mcp
+                port:
+                  number: 80
