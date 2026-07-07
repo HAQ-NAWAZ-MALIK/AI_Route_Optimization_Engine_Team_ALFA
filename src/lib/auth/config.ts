@@ -14,6 +14,10 @@ import { UserRole } from '@prisma/client';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     adapter: PrismaAdapter(prisma),
+    // Required for self-hosted deployments behind a reverse proxy (k8s ingress).
+    // Without this, NextAuth v5 rejects requests with UntrustedHost in production,
+    // which surfaces as a 500 on every /api/auth/* endpoint.
+    trustHost: true,
     session: { strategy: 'jwt' },
     pages: {
         signIn: '/login',
@@ -30,16 +34,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 password: { label: 'Password', type: 'password' },
             },
             async authorize(credentials) {
+                // NextAuth v5: return null for any auth failure. Throwing here is
+                // reclassified as a server "Configuration" error, which both
+                // mislabels the failure and bypasses the login form's inline
+                // "Invalid email or password" handling (causing a full redirect
+                // to /login?error=Configuration).
                 if (!credentials?.email || !credentials?.password) {
-                    throw new Error('Missing email or password');
+                    return null;
                 }
 
+                // Emails are always stored lowercase (see signup route), so
+                // normalize the lookup to avoid rejecting logins over casing or
+                // stray whitespace (e.g. mobile keyboard auto-capitalization).
+                const email = (credentials.email as string).trim().toLowerCase();
+
                 const user = await prisma.user.findUnique({
-                    where: { email: credentials.email as string },
+                    where: { email },
                 });
 
                 if (!user || !user.password) {
-                    throw new Error('Invalid email or password');
+                    return null;
                 }
 
                 const isValid = await verifyPassword(
@@ -48,7 +62,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 );
 
                 if (!isValid) {
-                    throw new Error('Invalid email or password');
+                    return null;
                 }
 
                 return {

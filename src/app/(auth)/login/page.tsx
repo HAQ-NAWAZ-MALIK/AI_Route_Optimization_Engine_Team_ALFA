@@ -82,6 +82,9 @@ function LoginForm() {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     required
                     error={error && email === '' ? 'Email is required' : undefined}
                 />

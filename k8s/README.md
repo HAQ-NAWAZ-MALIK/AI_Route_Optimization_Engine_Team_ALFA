@@ -70,6 +70,6 @@ kubectl -n alpha rollout status deploy/route-optimizer-mcp
 
 ```bash
 kubectl -n alpha get pods,svc,ingress
-curl -fsS https://route-optimizer.kube.nikhilbhatia.com/api/v1/health
-curl -fsS https://mcp.route-optimizer.kube.nikhilbhatia.com/health
+curl -fsS https://route-optimizer.nikhilbhatia.com/api/v1/health
+curl -fsS https://mcp.route-optimizer.nikhilbhatia.com/health
 ```

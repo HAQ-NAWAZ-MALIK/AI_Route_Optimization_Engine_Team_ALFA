@@ -95,7 +95,7 @@ build_image() {
     args+=(--load)
   fi
 
-  docker buildx build "${args[@]}" "${extra_args[@]}" "$PROJECT_ROOT"
+  docker buildx build "${args[@]}" ${extra_args[@]+"${extra_args[@]}"} "$PROJECT_ROOT"
   echo
 }
 
