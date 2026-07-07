@@ -8,12 +8,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import Stripe from 'stripe';
+import { getStripe } from '@/lib/stripe';
 import { prisma } from '@/lib/db/prisma';
 import { emailService } from '@/lib/email/email-service';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2025-12-15.clover',
-});
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
@@ -30,7 +27,7 @@ export async function POST(request: NextRequest) {
         // Verify webhook signature
         let event: Stripe.Event;
         try {
-            event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+            event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
         } catch (err) {
             console.error('[Stripe Webhook] Signature verification failed:', err);
             return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
@@ -88,7 +85,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     // Get subscription details from Stripe
-    const stripeSubscription: any = await stripe.subscriptions.retrieve(stripeSubscriptionId as string);
+    const stripeSubscription: any = await getStripe().subscriptions.retrieve(stripeSubscriptionId as string);
     const plan = metadata.plan as 'PRO' | 'ENTERPRISE';
 
     // Create or update subscription in database
@@ -159,7 +156,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     });
 
     // Update subscription period
-    const stripeSubscription: any = await stripe.subscriptions.retrieve(subscription as string);
+    const stripeSubscription: any = await getStripe().subscriptions.retrieve(subscription as string);
     await prisma.subscription.update({
         where: { id: dbSubscription.id },
         data: {

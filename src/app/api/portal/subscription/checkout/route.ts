@@ -6,14 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { getStripe } from '@/lib/stripe';
 import { handleApiError, Errors } from '@/lib/api/error-handler';
 import { requireAuth } from '@/lib/api/permissions';
 import { z } from 'zod';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2025-12-15.clover',
-});
 
 const RequestSchema = z.object({
     plan: z.enum(['PRO', 'ENTERPRISE'], {
@@ -46,7 +42,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Create Stripe checkout session
-        const checkoutSession = await stripe.checkout.sessions.create({
+        const checkoutSession = await getStripe().checkout.sessions.create({
             customer_email: session.user.email!,
             line_items: [
                 {
