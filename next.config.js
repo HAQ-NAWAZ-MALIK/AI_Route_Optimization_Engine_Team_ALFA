@@ -15,14 +15,6 @@ const nextConfig = {
     experimental: {
         // serverActions: true,
     },
-    // Serve the static landing page at the root URL without redirecting.
-    async rewrites() {
-        return {
-            beforeFiles: [
-                { source: '/', destination: '/demo.html' },
-            ],
-        };
-    },
 };
 
 module.exports = nextConfig;

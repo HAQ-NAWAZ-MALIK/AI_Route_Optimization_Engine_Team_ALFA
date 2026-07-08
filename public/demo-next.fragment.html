@@ -1,0 +1,488 @@
+<!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-content">
+            <a href="#" class="navbar-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                RouteAI
+            </a>
+            <div class="navbar-links">
+                <a href="#features" class="navbar-link">Features</a>
+                <a href="#app" class="navbar-link">Demo</a>
+                <a href="#" class="navbar-link">Pricing</a>
+                <a href="#" class="navbar-link">Docs</a>
+            </div>
+            <a href="#app" class="navbar-cta">Try Demo</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <span class="hero-eyebrow">Introducing RouteAI Pro</span>
+        <h1 class="hero-title">
+            The <span class="gradient-text">smartest</span> way<br>to optimize routes.
+        </h1>
+        <p class="hero-subtitle">
+            Harness the power of AI to reduce fleet costs by up to 40%.
+            Enterprise-grade optimization that just works.
+        </p>
+        <div class="hero-actions">
+            <a href="#app" class="btn btn-primary btn-large">
+                Start Optimizing
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14m-7-7l7 7-7 7" />
+                </svg>
+            </a>
+            <a href="#features" class="btn btn-secondary btn-large">
+                Learn More
+            </a>
+        </div>
+        <div class="scroll-indicator">
+            <span>Scroll to explore</span>
+            <div class="scroll-mouse"></div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="section-header">
+            <span class="section-eyebrow">Why RouteAI</span>
+            <h2 class="section-title">Built for modern fleets.</h2>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon blue">🧠</div>
+                <h3 class="feature-title">AI-Powered</h3>
+                <p class="feature-description">
+                    Advanced machine learning algorithms analyze traffic patterns,
+                    delivery windows, and vehicle capacity in real-time.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon green">⚡</div>
+                <h3 class="feature-title">Instant Results</h3>
+                <p class="feature-description">
+                    Get optimized routes in milliseconds, not minutes.
+                    Our engine processes thousands of stops instantly.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon orange">📊</div>
+                <h3 class="feature-title">Deep Analytics</h3>
+                <p class="feature-description">
+                    Comprehensive reporting on fuel savings, time efficiency,
+                    and carbon footprint reduction across your fleet.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon purple">🔌</div>
+                <h3 class="feature-title">Seamless Integration</h3>
+                <p class="feature-description">
+                    RESTful APIs that integrate with your existing systems.
+                    Works with any fleet management software.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Section -->
+    <section class="app-section" id="app">
+        <div class="app-container">
+            <div class="section-header">
+                <span class="section-eyebrow">Interactive Demo</span>
+                <h2 class="section-title">See it in action.</h2>
+            </div>
+
+            <div class="app-interface">
+                <!-- Sidebar -->
+                <div class="sidebar-panel">
+                    <div class="sidebar-header">
+                        <h3 class="sidebar-title">Route Optimizer</h3>
+                        <p class="sidebar-subtitle">Enterprise Fleet Management v2.0</p>
+                        <div class="status-pill ready" id="statusPill">
+                            <span class="status-dot"></span>
+                            <span id="statusText">Ready</span>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Data Management Panel -->
+                    <div class="data-panel-wrapper" id="dataPanelWrapper">
+                        <button class="data-panel-toggle" onclick="toggleDataPanel()">
+                            <span class="data-panel-toggle-text">
+                                <span>📊</span>
+                                <span>Data Management</span>
+                            </span>
+                            <span class="data-panel-toggle-icon">▼</span>
+                        </button>
+                        <div class="data-panel-content">
+                            <div class="sidebar-controls" id="controlsPanel">
+                                <button class="control-btn" onclick="loadSampleData()" id="loadDataBtn">
+                                    <div class="control-btn-icon">📂</div>
+                                    <div class="control-btn-text">
+                                        <span class="control-btn-label">Load Sample Data</span>
+                                        <span class="control-btn-desc">25 employees, 4 vehicles</span>
+                                    </div>
+                                </button>
+
+                                <input type="file" id="empInput" accept=".csv" style="display: none"
+                                    onchange="handleFileUpload(this, 'employees')">
+                                <button class="control-btn" onclick="document.getElementById('empInput').click()"
+                                    id="uploadEmpBtn">
+                                    <div class="control-btn-icon">👥</div>
+                                    <div class="control-btn-text">
+                                        <span class="control-btn-label">Upload Employees</span>
+                                        <span class="control-btn-desc">Name, Lat, Lng, Address</span>
+                                    </div>
+                                    <button class="info-btn"
+                                        onclick="event.stopPropagation(); openModal('employeesModal')"
+                                        title="View CSV Format">ⓘ</button>
+                                </button>
+
+                                <input type="file" id="cabInput" accept=".csv" style="display: none"
+                                    onchange="handleFileUpload(this, 'cabs')">
+                                <button class="control-btn" onclick="document.getElementById('cabInput').click()"
+                                    id="uploadCabBtn">
+                                    <div class="control-btn-icon">🚖</div>
+                                    <div class="control-btn-text">
+                                        <span class="control-btn-label">Upload Cabs</span>
+                                        <span class="control-btn-desc">Name, Capacity, Driver</span>
+                                    </div>
+                                    <button class="info-btn" onclick="event.stopPropagation(); openModal('cabsModal')"
+                                        title="View CSV Format">ⓘ</button>
+                                </button>
+
+                                <input type="file" id="configInput" accept=".csv" style="display: none"
+                                    onchange="handleFileUpload(this, 'config')">
+                                <button class="control-btn" onclick="document.getElementById('configInput').click()"
+                                    id="uploadConfigBtn">
+                                    <div class="control-btn-icon">🏢</div>
+                                    <div class="control-btn-text">
+                                        <span class="control-btn-label">Upload Config</span>
+                                        <span class="control-btn-desc">Office Location & Settings</span>
+                                    </div>
+                                    <button class="info-btn" onclick="event.stopPropagation(); openModal('configModal')"
+                                        title="View CSV Format">ⓘ</button>
+                                </button>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Capacity Indicator -->
+                    <div class="capacity-indicator" id="capacityIndicator" style="display: none;">
+                        <div id="capacityStatus" class="capacity-status ok">
+                            <div class="capacity-header">
+                                <span class="capacity-icon">✅</span>
+                                <span class="capacity-title">Capacity Check</span>
+                            </div>
+                            <div class="capacity-details">
+                                <div class="capacity-item">
+                                    <span class="capacity-label">Employees</span>
+                                    <span class="capacity-value" id="capacityEmployees">0</span>
+                                </div>
+                                <div class="capacity-divider">→</div>
+                                <div class="capacity-item">
+                                    <span class="capacity-label">Total Seats</span>
+                                    <span class="capacity-value" id="capacitySeats">0</span>
+                                </div>
+                            </div>
+                            <div class="capacity-message" id="capacityMessage"></div>
+                            <div class="capacity-actions" id="capacityActions" style="display: none;">
+                                <button class="capacity-action-btn" onclick="quickAddCabs()">
+                                    ➕ Add Cabs
+                                </button>
+                                <button class="capacity-action-btn" onclick="quickIncreaseSeats()">
+                                    🪑 +Seats
+                                </button>
+                                <button class="capacity-action-btn warning" onclick="quickRemoveEmployees()">
+                                    👥 Trim Employees
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Always Visible Optimize Route Button -->
+                    <div class="optimize-section" id="optimizeSection">
+                        <button class="control-btn primary optimize-main-btn" onclick="startOptimization()"
+                            id="optimizeBtn" disabled>
+                            <div class="control-btn-icon">🚀</div>
+                            <div class="control-btn-text">
+                                <span class="control-btn-label">Optimize Routes</span>
+                                <span class="control-btn-desc">Run AI to compute best routes</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <div class="stat-label">Distance</div>
+                            <div class="stat-value" id="totalDist">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Duration</div>
+                            <div class="stat-value" id="totalDur">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Vehicles</div>
+                            <div class="stat-value highlight" id="vehCount">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Employees</div>
+                            <div class="stat-value highlight" id="empCount">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Cab Seats</div>
+                            <div class="stat-value" id="cabSeats">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Efficiency</div>
+                            <div class="stat-value highlight" id="efficiency">—</div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Log -->
+                    <div class="activity-log">
+                        <div class="activity-header">
+                            <div class="activity-dot"></div>
+                            <span>Activity Log</span>
+                        </div>
+                        <div class="activity-content" id="logs">
+                            <div class="log-entry system">
+                                <span class="timestamp">00:00:00</span>
+                                <span>System initialized. Awaiting data...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map Container -->
+                <div class="map-container">
+                    <div id="map"></div>
+
+                    <!-- Map Controls -->
+                    <div class="map-overlay">
+                        <button class="map-control-btn" onclick="resetMapView()" title="Reset View">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8" />
+                                <path d="M3 3v5h5" />
+                            </svg>
+                        </button>
+                        <button class="map-control-btn" onclick="toggleSatellite()" title="Toggle Satellite">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7" />
+                                <rect x="14" y="3" width="7" height="7" />
+                                <rect x="14" y="14" width="7" height="7" />
+                                <rect x="3" y="14" width="7" height="7" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Progress Overlay -->
+                    <div class="progress-overlay" id="progressOverlay">
+                        <div class="progress-spinner"></div>
+                        <div class="progress-text" id="progressText">Optimizing Routes...</div>
+                        <div class="progress-subtext" id="progressSubtext">This may take a moment</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+
+
+                    <!-- Results Toggle Button -->
+                    <button class="results-toggle" id="resultsToggle" onclick="toggleResults()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M15 18l-6-6 6-6" />
+                        </svg>
+                        <span class="results-toggle-text">Routes</span>
+                    </button>
+
+                    <!-- Results Panel -->
+                    <div class="results-panel" id="resultsPanel">
+                        <div class="results-header">
+                            <span class="results-title">🎉 Optimization Complete</span>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="control-btn small" onclick="openAnalytics()"
+                                    style="padding: 4px 12px; font-size: 12px; height: 28px; min-height: unset; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none;">
+                                    📊 Full Analytics
+                                </button>
+                                <button class="control-btn small" onclick="playAllRoutes()"
+                                    style="padding: 4px 12px; font-size: 12px; height: 28px; min-height: unset;">
+                                    ▶ Play All
+                                </button>
+                                <button class="results-close" onclick="closeResults()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M18 6L6 18M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="results-content" id="resultsContent">
+                            <!-- Route cards will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-text">
+                © 2026 RouteAI. Intelligent fleet optimization for the modern enterprise.
+            </p>
+            <div class="footer-links">
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <a href="#" class="footer-link">Terms of Service</a>
+                <a href="#" class="footer-link">API Documentation</a>
+                <a href="#" class="footer-link">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- CSV Info Modals -->
+    <div class="modal-overlay" id="employeesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">📋 Employees CSV Format</span>
+                <button class="modal-close" onclick="closeModal('employeesModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--apple-gray-1);">
+                    Upload a CSV file with employee pickup/drop locations.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>name</code> or <code>employee_name</code></td>
+                            <td>Optional</td>
+                            <td>Employee name</td>
+                        </tr>
+                        <tr>
+                            <td><code>lat</code> or <code>latitude</code></td>
+                            <td>✅ Yes</td>
+                            <td>Latitude coordinate</td>
+                        </tr>
+                        <tr>
+                            <td><code>lng</code>, <code>lon</code>, or <code>longitude</code></td>
+                            <td>✅ Yes</td>
+                            <td>Longitude coordinate</td>
+                        </tr>
+                        <tr>
+                            <td><code>address</code> or <code>location</code></td>
+                            <td>Optional</td>
+                            <td>Address description</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="cabsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🚖 Cabs CSV Format</span>
+                <button class="modal-close" onclick="closeModal('cabsModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--apple-gray-1);">
+                    Upload a CSV file to define your vehicle fleet.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Required</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>name</code> or <code>vehicle_name</code></td>
+                            <td>Optional</td>
+                            <td>Vehicle identifier</td>
+                        </tr>
+                        <tr>
+                            <td><code>capacity</code> or <code>seats</code></td>
+                            <td>Optional</td>
+                            <td>Passenger capacity (default: 4)</td>
+                        </tr>
+                        <tr>
+                            <td><code>driver</code> or <code>driver_name</code></td>
+                            <td>Optional</td>
+                            <td>Assigned driver</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="configModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🏢 Config CSV Format</span>
+                <button class="modal-close" onclick="closeModal('configModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--apple-gray-1);">
+                    Configure office location and trip settings. Two-column format: setting, value.
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Setting</th>
+                            <th>Value Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>office_name</code></td>
+                            <td>Text</td>
+                            <td>Office name</td>
+                        </tr>
+                        <tr>
+                            <td><code>office_lat</code></td>
+                            <td>Number</td>
+                            <td>Latitude (required)</td>
+                        </tr>
+                        <tr>
+                            <td><code>office_lng</code></td>
+                            <td>Number</td>
+                            <td>Longitude (required)</td>
+                        </tr>
+                        <tr>
+                            <td><code>office_address</code></td>
+                            <td>Text</td>
+                            <td>Street address</td>
+                        </tr>
+                        <tr>
+                            <td><code>departure_time</code></td>
+                            <td>HH:MM</td>
+                            <td>Trip time</td>
+                        </tr>
+                        <tr>
+                            <td><code>trip_type</code></td>
+                            <td>pickup/drop</td>
+                            <td>Route type</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
