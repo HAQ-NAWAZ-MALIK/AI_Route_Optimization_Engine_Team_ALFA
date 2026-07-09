@@ -89,17 +89,31 @@ if (config.rateLimit.enabled) {
 /**
  * Middleware: Authentication
  */
+function getApiKey(req: Request): string | undefined {
+    const headerApiKey = req.header('x-api-key');
+    if (headerApiKey) {
+        return headerApiKey;
+    }
+
+    const queryApiKey = req.query.key;
+    if (typeof queryApiKey === 'string') {
+        return queryApiKey;
+    }
+
+    return undefined;
+}
+
 function authenticate(req: Request, res: Response, next: NextFunction) {
     if (!config.requireAuth) {
         return next(); // Auth disabled
     }
 
-    const apiKey = req.header('x-api-key');
+    const apiKey = getApiKey(req);
 
     if (!apiKey) {
         return res.status(401).json({
             error: 'Authentication required',
-            message: 'Missing X-API-Key header',
+            message: 'Missing API key. Provide X-API-Key header or key query parameter.',
         });
     }
 
