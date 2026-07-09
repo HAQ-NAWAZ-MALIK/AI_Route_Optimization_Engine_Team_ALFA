@@ -17,6 +17,7 @@ import {
 } from './schemas/tool-schemas.js';
 
 const app = express();
+const MCP_PROTOCOL_VERSION = '2024-11-05';
 
 type ToolResultContent = {
     type?: string;
@@ -242,6 +243,28 @@ app.post('/mcp', authenticate, async (req, res) => {
         let result;
 
         switch (method) {
+            case 'initialize':
+                result = {
+                    protocolVersion: typeof params?.protocolVersion === 'string'
+                        ? params.protocolVersion
+                        : MCP_PROTOCOL_VERSION,
+                    capabilities: {
+                        tools: {},
+                    },
+                    serverInfo: {
+                        name: 'ai-transport-optimizer',
+                        version: getServerInfo().version,
+                    },
+                };
+                break;
+
+            case 'notifications/initialized':
+                return res.status(204).send();
+
+            case 'ping':
+                result = {};
+                break;
+
             case 'tools/list':
                 result = {
                     tools: [
@@ -262,6 +285,14 @@ app.post('/mcp', authenticate, async (req, res) => {
                 const { name } = params;
                 const args = params.arguments ?? {};
                 result = await callToolByName(name, args, requestId);
+                break;
+
+            case 'resources/list':
+                result = { resources: [] };
+                break;
+
+            case 'prompts/list':
+                result = { prompts: [] };
                 break;
 
             default:
